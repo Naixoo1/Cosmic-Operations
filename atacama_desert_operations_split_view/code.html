@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>ALMA | Atacama Large Millimeter Array Dashboard</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <style>
+        body {
+            background-color: #0f131d;
+            color: #dfe2f1;
+            -webkit-font-smoothing: antialiased;
+            overflow: hidden;
+            height: 100vh;
+        }
+        .scanline {
+            width: 100%;
+            height: 2px;
+            background: rgba(111, 238, 225, 0.08);
+            position: absolute;
+            animation: scan 8s linear infinite;
+            pointer-events: none;
+        }
+        @keyframes scan {
+            0% { top: 0; }
+            100% { top: 100%; }
+        }
+        .zebra-row:nth-child(even) {
+            background-color: rgba(255, 255, 255, 0.02);
+        }
+        .terminal-glow {
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.6), 0 0 15px rgba(111, 238, 225, 0.05);
+        }
+    </style>
+    <!-- Tailwind Configuration and tokens matching DESIGN.md -->
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary": "#7ef0a7",
+                        "on-tertiary-fixed-variant": "#00522c",
+                        "error": "#ffb4ab",
+                        "primary-fixed": "#79f7ea",
+                        "on-background": "#dfe2f1",
+                        "inverse-surface": "#dfe2f1",
+                        "tertiary-fixed": "#88f9b0",
+                        "on-primary": "#003733",
+                        "secondary": "#ffb866",
+                        "outline-variant": "#3c4947",
+                        "tertiary-container": "#62d38e",
+                        "surface": "#0f131d",
+                        "surface-container-lowest": "#0a0e18",
+                        "on-primary-fixed": "#00201d",
+                        "inverse-primary": "#006a63",
+                        "on-secondary-container": "#ffe3c9",
+                        "surface-container": "#1c1f2a",
+                        "on-surface-variant": "#bbc9c7",
+                        "on-tertiary": "#00391d",
+                        "on-secondary-fixed-variant": "#673d00",
+                        "on-surface": "#dfe2f1",
+                        "on-secondary": "#482900",
+                        "inverse-on-surface": "#2c303b",
+                        "surface-bright": "#353944",
+                        "secondary-fixed-dim": "#ffb866",
+                        "tertiary-fixed-dim": "#6bdc96",
+                        "secondary-container": "#955b01",
+                        "on-tertiary-container": "#005930",
+                        "on-error": "#690005",
+                        "secondary-fixed": "#ffddba",
+                        "outline": "#869491",
+                        "on-primary-container": "#005750",
+                        "surface-container-low": "#171b26",
+                        "primary": "#6feee1",
+                        "surface-container-high": "#262a35",
+                        "surface-dim": "#0f131d",
+                        "surface-variant": "#313540",
+                        "on-error-container": "#ffdad6",
+                        "background": "#0f131d",
+                        "on-secondary-fixed": "#2b1700",
+                        "surface-tint": "#5adace",
+                        "error-container": "#93000a",
+                        "primary-fixed-dim": "#5adace",
+                        "on-tertiary-fixed": "#00210f",
+                        "on-primary-fixed-variant": "#00504a",
+                        "primary-container": "#4fd1c5",
+                        "surface-container-highest": "#313540"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "sm": "4px",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "margin": "24px",
+                        "unit": "4px",
+                        "panel-padding": "12px",
+                        "gutter": "16px"
+                    },
+                    "fontFamily": {
+                        "data": ["JetBrains Mono"],
+                        "data-lg": ["JetBrains Mono"],
+                        "data-sm": ["JetBrains Mono"],
+                        "headline-lg": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "label-caps": ["JetBrains Mono"],
+                        "body-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "data-lg": ["18px", {"lineHeight": "1.4", "fontWeight": "500"}],
+                        "data-sm": ["12px", {"lineHeight": "1.2", "fontWeight": "400"}],
+                        "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                        "body-lg": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "label-caps": ["11px", {"lineHeight": "1", "letterSpacing": "0.1em", "fontWeight": "700"}],
+                        "body-sm": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+    <!-- Core State Integration for Staged Transaction Pattern -->
+    <script src="../core/game-state.js"></script>
+</head>
+<body class="flex flex-col h-screen font-headline select-none">
+    <nav class="shrink-0 w-full z-50 h-12 bg-surface border-b border-outline-variant flex justify-between items-center px-6">
+        <div class="flex items-center gap-4">
+            <a href="../index.html" class="flex items-center gap-2 text-primary font-data text-[12px] font-bold tracking-wider hover:bg-primary/10 px-3 py-1.5 border border-primary/30 rounded-sm transition-colors uppercase">
+                <span class="material-symbols-outlined text-[16px]">arrow_back</span>
+                RETURN TO MAIN ORBITAL HUB
+            </a>
+            <div class="w-px h-4 bg-outline-variant"></div>
+            <span class="font-data text-[11px] text-on-surface-variant tracking-wider uppercase">SECTOR: ATACAMA CHILE // INTERFEROMETRY INTERFACE</span>
+        </div>
+        <div class="flex items-center gap-4 font-data text-[11px] text-on-surface-variant">
+            <span>ARRAY_GRID: <span class="text-tertiary">SYNCHRONIZED</span></span>
+        </div>
+    </nav>
+
+    <main class="flex-grow flex w-full overflow-hidden">
+        <!-- Sidebar layout (Dynamic Contract Card at top) -->
+        <aside class="w-96 shrink-0 h-full border-r border-outline-variant bg-surface-container-low p-panel-padding flex flex-col gap-gutter overflow-y-auto">
+            
+            <!-- DYNAMIC ACTIVE MISSION COMPACT LOG -->
+            <section id="active-mission-section" class="bg-surface-container border border-primary/40 p-panel-padding rounded-sm relative shadow-lg">
+                <div class="absolute top-1 right-2 font-data text-[8px] text-primary animate-pulse">// ACTIVE CONTRACT</div>
+                <div class="bg-primary/10 border border-primary/20 px-2.5 py-1 mb-2.5">
+                    <h2 class="text-label-caps font-label-caps text-primary tracking-wider uppercase">ACTIVE HUB MISSION</h2>
+                </div>
+                <div class="space-y-2">
+                    <h3 id="sidebar-mission-title" class="font-bold text-[12.5px] text-on-surface leading-tight">Loading staged mission...</h3>
+                    <p id="sidebar-mission-desc" class="text-[11px] text-on-surface-variant leading-relaxed">Verifying secure communications channel...</p>
+                    <div class="flex justify-between items-center pt-2 border-t border-outline-variant/30 font-data text-[10px]">
+                        <span class="opacity-70">CONTRACT VALUE:</span>
+                        <span id="sidebar-mission-rewards" class="text-tertiary font-bold">--- CR // --- SI</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Array Profile -->
+            <section class="bg-surface-container border border-outline-variant p-panel-padding rounded-sm">
+                <div class="bg-outline-variant/30 px-2 py-0.5 mb-2">
+                    <h3 class="text-label-caps font-label-caps text-on-surface">ARRAY PROFILE</h3>
+                </div>
+                <div class="space-y-1">
+                    <div class="flex justify-between items-center py-0.5 zebra-row">
+                        <span class="text-[11px] font-label-caps text-on-surface-variant">STATION</span>
+                        <span class="text-data-sm font-data-sm text-on-surface">ALMA-MAIN-04</span>
+                    </div>
+                    <div class="flex justify-between items-center py-0.5 zebra-row">
+                        <span class="text-[11px] font-label-caps text-on-surface-variant">ELEVATION</span>
+                        <span class="text-data-sm font-data-sm text-on-surface">5,050 M</span>
+                    </div>
+                    <div class="flex justify-between items-center py-0.5 zebra-row">
+                        <span class="text-[11px] font-label-caps text-on-surface-variant">ANTENNAS ACTIVE</span>
+                        <span class="text-data-sm font-data-sm text-tertiary">64 / 64</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Baseline Correlator Status -->
+            <section class="bg-surface-container border border-outline-variant p-panel-padding rounded-sm">
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="text-label-caps font-label-caps text-on-surface">BASELINE CORRELATOR</h3>
+                    <span class="text-[10px] bg-secondary-container text-on-secondary-container px-1.5 font-data-sm">QUAD-MODE</span>
+                </div>
+                <div class="p-2 bg-surface-container-lowest border border-outline-variant flex justify-between items-center">
+                    <span class="text-data-sm font-data-sm text-on-surface-variant">DATA THROUGHPUT</span>
+                    <span class="text-data-lg font-data-lg text-secondary" id="throughput">1.24 Tb/s</span>
+                </div>
+            </section>
+
+            <!-- Receiver Band Configurations -->
+            <section class="bg-surface-container border border-outline-variant p-panel-padding rounded-sm flex-grow">
+                <h3 class="text-label-caps font-label-caps text-on-surface mb-2">RECEIVER BAND CONFIGURATION</h3>
+                <div class="grid grid-cols-2 gap-2">
+                    <button class="p-2 border border-primary bg-primary/10 text-primary font-data-sm text-left flex flex-col justify-between h-14 rounded-sm">
+                        <span class="text-[10px] font-label-caps opacity-70">BAND 3</span>
+                        <span class="font-bold">100 GHz</span>
+                    </button>
+                    <button class="p-2 border border-outline-variant hover:border-on-surface-variant text-on-surface-variant font-data-sm text-left flex flex-col justify-between h-14 rounded-sm transition-colors">
+                        <span class="text-[10px] font-label-caps opacity-70">BAND 6</span>
+                        <span class="font-bold text-on-surface">230 GHz</span>
+                    </button>
+                    <button class="p-2 border border-outline-variant hover:border-on-surface-variant text-on-surface-variant font-data-sm text-left flex flex-col justify-between h-14 rounded-sm transition-colors">
+                        <span class="text-[10px] font-label-caps opacity-70">BAND 7</span>
+                        <span class="font-bold text-on-surface">345 GHz</span>
+                    </button>
+                    <button class="p-2 border border-outline-variant hover:border-on-surface-variant text-on-surface-variant font-data-sm text-left flex flex-col justify-between h-14 rounded-sm transition-colors">
+                        <span class="text-[10px] font-label-caps opacity-70">BAND 9</span>
+                        <span class="font-bold text-on-surface">650 GHz</span>
+                    </button>
+                </div>
+
+                <div class="mt-4 pt-4 border-t border-outline-variant space-y-2">
+                    <span class="text-[11px] font-label-caps text-on-surface-variant block">PRECIPITABLE WATER VAPOR</span>
+                    <div class="flex items-center gap-3">
+                        <span class="text-data-lg font-data-lg text-primary">0.42 mm</span>
+                        <div class="flex-grow h-1.5 bg-outline-variant rounded-full overflow-hidden">
+                            <div class="h-full bg-primary" style="width: 15%"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </aside>
+
+        <!-- Dynamic Game Oscilloscope Viewport -->
+        <div id="atacama-viewport" class="flex-grow h-full border border-outline-variant flex flex-col items-center justify-center p-6 relative bg-[#04060b]">
+            <div class="scanline"></div>
+            <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,184,102,0.015)_0%,transparent_80%)] pointer-events-none"></div>
+            
+            <!-- Core Canvas Screen -->
+            <canvas id="oscilloscopeCanvas" width="550" height="320" class="border border-outline-variant/40 bg-surface-container-lowest/90 rounded-sm shadow-2xl w-full max-w-[650px] aspect-[11/6] z-10"></canvas>
+
+            <!-- Tact sliders layout beneath the canvas -->
+            <div class="w-full max-w-[650px] bg-surface-container border border-outline-variant/50 p-4 mt-4 rounded-sm space-y-4 z-10 shadow-lg">
+                <div class="flex justify-between items-center border-b border-outline-variant/30 pb-1.5">
+                    <span class="font-data text-[10px] text-primary block uppercase font-bold tracking-wider">// PHASE_CORRELATOR CONTROL CONSOLE</span>
+                    <span id="sync-telemetry" class="font-data text-[10px] text-error font-bold tracking-wide animate-pulse">UNALIGNED // 0% MATCH</span>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-6">
+                    <!-- Amplitude Slider -->
+                    <div class="space-y-1.5">
+                        <div class="flex justify-between font-data text-[10px] text-on-surface-variant">
+                            <span>CORRELATOR AMPLITUDE (A)</span>
+                            <span id="amplitude-val" class="text-secondary font-bold">30%</span>
+                        </div>
+                        <input type="range" id="slider-amplitude" min="15" max="85" step="1" value="30" class="w-full h-1 bg-surface-container-lowest rounded-sm appearance-none cursor-pointer accent-primary border border-outline-variant/40">
+                    </div>
+
+                    <!-- Frequency Slider -->
+                    <div class="space-y-1.5">
+                        <div class="flex justify-between font-data text-[10px] text-on-surface-variant">
+                            <span>CORRELATOR FREQUENCY (F)</span>
+                            <span id="frequency-val" class="text-secondary font-bold">0.020 Hz</span>
+                        </div>
+                        <input type="range" id="slider-frequency" min="10" max="80" step="1" value="20" class="w-full h-1 bg-surface-container-lowest rounded-sm appearance-none cursor-pointer accent-primary border border-outline-variant/40">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Complete Transmit Overlay (Hidden initially) -->
+            <div id="correlator-complete-overlay" class="hidden absolute inset-0 bg-surface-container-lowest/90 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center select-none z-30">
+                <div class="w-[450px] bg-surface-container border border-tertiary/40 p-6 rounded-sm space-y-5 shadow-2xl terminal-glow">
+                    <span class="material-symbols-outlined text-tertiary text-5xl animate-bounce">wifi_channel</span>
+                    <h2 class="text-lg font-bold font-headline text-tertiary tracking-wide uppercase">SIGNAL INTERFERENCE SOLVED</h2>
+                    <p class="font-data text-[11px] text-on-surface-variant leading-relaxed">
+                        Atacama Array antennas have successfully phased the target frequency. Clean telemetries are synchronized and logged to memory.
+                    </p>
+                    <button onclick="logTargetCoordinates()" class="w-full py-2.5 bg-tertiary hover:bg-tertiary/80 text-surface font-data text-[11px] font-bold tracking-wider rounded-sm transition-all uppercase animate-pulse">
+                        [ LOG TARGET COORDINATES ]
+                    </button>
+                </div>
+            </div>
+            
+            <div class="absolute bottom-4 left-4 bg-surface/85 border border-outline-variant/60 px-2.5 py-1 text-[9px] font-label-caps text-on-surface-variant z-10 pointer-events-none shadow-md">
+                ALMA RADIO OSCILLOSCOPE DECK // INTERFEROMETRIC COMBINER
+            </div>
+        </div>
+    </main>
+
+    <footer class="shrink-0 w-full z-50 h-8 bg-surface-container border-t border-outline-variant flex justify-between items-center px-6">
+        <div class="flex items-center gap-4">
+            <span class="font-label-caps text-label-caps text-on-surface-variant">STATION_ALPHA-01 // TELEMETRY FEED</span>
+            <div class="flex gap-4">
+                <span class="font-data-sm text-data-sm text-tertiary">POWER: 98.4%</span>
+                <span class="font-data-sm text-data-sm text-tertiary">SENSORS: ACTIVE</span>
+                <span class="font-data-sm text-data-sm text-tertiary">DATA_LINK: ESTABLISHED</span>
+            </div>
+        </div>
+        <div class="flex gap-4 font-label-caps text-label-caps text-on-surface-variant">
+            <span class="hover:bg-surface-variant px-2 transition-colors cursor-pointer text-data-sm">DIAGNOSTICS</span>
+            <span class="hover:bg-surface-variant px-2 transition-colors cursor-pointer text-data-sm">LOG_EXPORT</span>
+        </div>
+    </footer>
+
+    <script>
+        // 1. STATE & SECURITY CHECK (Staged Transaction Pattern Safeguards)
+        let activePayload = null;
+
+        function verifyAndLoadState() {
+            const serialized = localStorage.getItem('active_mission_payload');
+            if (!serialized) {
+                // No mission staged; gracefully fallback to ground control launcher
+                window.location.href = '../index.html';
+                return;
+            }
+            try {
+                activePayload = JSON.parse(serialized);
+                if (!activePayload || !activePayload.missionId) {
+                    window.location.href = '../index.html';
+                    return;
+                }
+            } catch (e) {
+                console.error("Payload decoding failure", e);
+                window.location.href = '../index.html';
+                return;
+            }
+
+            // Populate Sidebar Active Mission telemetry card
+            document.getElementById('sidebar-mission-title').innerText = activePayload.objectiveText.toUpperCase();
+            document.getElementById('sidebar-mission-desc').innerText = `Cosmic interferences detected in millimeter band frequencies. Manipulate Amplitude and Frequency variables below to match telemetry.`;
+            document.getElementById('sidebar-mission-rewards').innerText = `+${activePayload.creditReward} CR // +${activePayload.intelReward} SI`;
+        }
+
+        // Run state safeguard checks immediately upon parsing
+        verifyAndLoadState();
+
+        // 2. Micro-interactions: Updating throughput data in sidebar
+        const throughputEl = document.getElementById('throughput');
+        if (throughputEl) {
+            setInterval(() => {
+                const val = (1.2 + Math.random() * 0.1).toFixed(2);
+                throughputEl.innerText = `${val} Tb/s`;
+            }, 2000);
+        }
+
+        // 3. MATH-DRIVEN RADIO OSCILLOSCOPE COMBINER GAME
+        const canvas = document.getElementById('oscilloscopeCanvas');
+        if (canvas) {
+            const ctx = canvas.getContext('2d');
+            const cw = canvas.width;
+            const ch = canvas.height;
+            const cy = ch / 2;
+
+            // Generate stable randomized targets for amplitude (A) and frequency (F) indexes
+            const targetA = 35 + Math.floor(Math.random() * 35); // Target height: 35px - 70px
+            const targetF = 18 + Math.floor(Math.random() * 42); // Target frequency index: 18 - 60
+
+            let time = 0;
+            let finishedPhase = false;
+
+            // Grab elements
+            const sliderA = document.getElementById('slider-amplitude');
+            const sliderF = document.getElementById('slider-frequency');
+            const ampText = document.getElementById('amplitude-val');
+            const freqText = document.getElementById('frequency-val');
+            const telemetryText = document.getElementById('sync-telemetry');
+
+            function renderOscilloscope() {
+                // Draw Screen Backdrop Grid (CRT Monitor Aesthetics)
+                ctx.fillStyle = '#060a12';
+                ctx.fillRect(0, 0, cw, ch);
+
+                // Draw coordinate tracking grid lines
+                ctx.save();
+                ctx.strokeStyle = 'rgba(111, 238, 225, 0.05)';
+                ctx.lineWidth = 1;
+                
+                // Vertical grid lines
+                for (let x = 0; x < cw; x += 30) {
+                    ctx.beginPath();
+                    ctx.moveTo(x, 0);
+                    ctx.lineTo(x, ch);
+                    ctx.stroke();
+                }
+                // Horizontal grid lines
+                for (let y = 0; y < ch; y += 30) {
+                    ctx.beginPath();
+                    ctx.moveTo(0, y);
+                    ctx.lineTo(cw, y);
+                    ctx.stroke();
+                }
+
+                // Center line
+                ctx.strokeStyle = 'rgba(111, 238, 225, 0.15)';
+                ctx.beginPath();
+                ctx.moveTo(0, cy);
+                ctx.lineTo(cw, cy);
+                ctx.stroke();
+                ctx.restore();
+
+                // Get dynamic slider values
+                const userA = parseInt(sliderA.value, 10);
+                const userF = parseInt(sliderF.value, 10);
+
+                // Update UI text labels
+                ampText.innerText = `${userA}%`;
+                freqText.innerText = `${(userF / 1000).toFixed(3)} Hz`;
+
+                // Compute relative offsets and match index
+                const diffA = Math.abs(userA - targetA);
+                const diffF = Math.abs(userF - targetF);
+
+                const errorA = diffA / targetA;
+                const errorF = diffF / targetF;
+
+                // Match coefficient math
+                const matchPct = Math.max(0, Math.floor(100 - (errorA * 55 + errorF * 55)));
+
+                // Set Strict 2% Tolerance Window criteria
+                const withinTolerance = (diffA <= 1.8) && (diffF <= 1.2);
+
+                // Telemetry matching feedback
+                if (withinTolerance) {
+                    telemetryText.innerText = "COHERENT WAVEFRONT // 100% SYNC";
+                    telemetryText.className = "font-data text-[10px] text-tertiary font-bold tracking-wide";
+                    if (!finishedPhase) {
+                        finishedPhase = true;
+                        triggerSignalComplete();
+                    }
+                } else {
+                    telemetryText.innerText = `PHASE DEVIATION // ${matchPct}% MATCH`;
+                    telemetryText.className = "font-data text-[10px] text-error font-bold tracking-wide animate-pulse";
+                }
+
+                // Increment wave flow time constant
+                time += 0.045;
+
+                // --- DRAW WAVE 1: TARGET NOISY MILLIMETER SIGNAL ---
+                ctx.save();
+                ctx.lineWidth = finishedPhase ? 2.5 : 1.5;
+                ctx.strokeStyle = finishedPhase ? '#7ef0a7' : 'rgba(255, 184, 102, 0.75)'; // Tertiary neon green vs warm amber
+                if (finishedPhase) {
+                    ctx.shadowColor = '#7ef0a7';
+                    ctx.shadowBlur = 10;
+                }
+
+                ctx.beginPath();
+                for (let x = 0; x < cw; x++) {
+                    const targetF_scaled = targetF / 400;
+                    const baseSine = Math.sin(x * targetF_scaled + time) * targetA;
+
+                    // Formulate dynamic math noise that dampens as match improves!
+                    let noise = 0;
+                    if (!finishedPhase) {
+                        const noiseStrength = (100 - matchPct) / 10; // dampens noise as user gets close
+                        const highFreq = Math.sin(x * 0.35 + time * 25) * 6;
+                        const fuzzyGrit = (Math.random() - 0.5) * 4.5;
+                        noise = (highFreq + fuzzyGrit) * (noiseStrength / 10);
+                    }
+
+                    const y = cy + baseSine + noise;
+                    if (x === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                }
+                ctx.stroke();
+                ctx.restore();
+
+                // --- DRAW WAVE 2: CLEAN USER CORRELATOR BEAM ---
+                if (!finishedPhase) {
+                    ctx.save();
+                    ctx.lineWidth = 2.0;
+                    ctx.strokeStyle = 'rgba(111, 238, 225, 0.85)'; // Neon primary cyan
+                    ctx.shadowColor = 'rgba(111, 238, 225, 0.4)';
+                    ctx.shadowBlur = 6;
+
+                    ctx.beginPath();
+                    for (let x = 0; x < cw; x++) {
+                        const userF_scaled = userF / 400;
+                        const y = cy + Math.sin(x * userF_scaled + time) * userA;
+                        if (x === 0) {
+                            ctx.moveTo(x, y);
+                        } else {
+                            ctx.lineTo(x, y);
+                        }
+                    }
+                    ctx.stroke();
+                    ctx.restore();
+                }
+
+                // Draw scope overlays / scope markings
+                ctx.save();
+                ctx.font = '8px "JetBrains Mono"';
+                ctx.fillStyle = 'rgba(111, 238, 225, 0.35)';
+                ctx.fillText("ALMA RADIO-TELESCOPE CORE", 15, 20);
+                ctx.fillText("PHASE CORRELATION MATRIX v4.02", 15, ch - 15);
+                ctx.restore();
+
+                requestAnimationFrame(renderOscilloscope);
+            }
+
+            // Run loop animations
+            renderOscilloscope();
+        }
+
+        // Display victory modal when waves match within strict tolerance
+        function triggerSignalComplete() {
+            const overlay = document.getElementById('correlator-complete-overlay');
+            if (overlay) {
+                overlay.classList.remove('hidden');
+            }
+        }
+
+        // Complete the contract, claim cash, and redirect safely back to ground control hub
+        function logTargetCoordinates() {
+            if (window.GameState) {
+                const completeSuccess = window.GameState.completeActiveMission();
+                if (completeSuccess) {
+                    // Safe redirection pipeline
+                    window.location.href = '../index.html';
+                } else {
+                    console.error("Failed to complete and claim staged contract rewards.");
+                    window.location.href = '../index.html';
+                }
+            } else {
+                window.location.href = '../index.html';
+            }
+        }
+    </script>
+</body>
+</html>

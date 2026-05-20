@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>BOSSCHA OBSERVATORY - STARLIGHT PHOTOMETRY</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-variant": "#313540",
+                    "outline": "#869491",
+                    "on-secondary-fixed": "#2b1700",
+                    "primary-fixed": "#79f7ea",
+                    "surface-container": "#1c1f2a",
+                    "on-primary": "#003733",
+                    "surface-container-highest": "#313540",
+                    "surface-container-lowest": "#0a0e18",
+                    "on-surface-variant": "#bbc9c7",
+                    "on-secondary-container": "#ffe3c9",
+                    "on-primary-container": "#005750",
+                    "on-background": "#dfe2f1",
+                    "primary-container": "#4fd1c5",
+                    "on-tertiary-fixed": "#00210f",
+                    "on-tertiary-fixed-variant": "#00522c",
+                    "on-surface": "#dfe2f1",
+                    "surface-bright": "#353944",
+                    "on-secondary-fixed-variant": "#673d00",
+                    "inverse-primary": "#006a63",
+                    "surface-container-low": "#171b26",
+                    "on-primary-fixed": "#00201d",
+                    "secondary-fixed-dim": "#ffb866",
+                    "outline-variant": "#3c4947",
+                    "secondary-fixed": "#ffddba",
+                    "error-container": "#93000a",
+                    "primary-fixed-dim": "#5adace",
+                    "background": "#0f131d",
+                    "on-tertiary-container": "#005930",
+                    "tertiary-container": "#62d38e",
+                    "secondary-container": "#955b01",
+                    "error": "#ffb4ab",
+                    "on-error-container": "#ffdad6",
+                    "surface-tint": "#5adace",
+                    "tertiary": "#7ef0a7",
+                    "on-primary-fixed-variant": "#00504a",
+                    "inverse-on-surface": "#2c303b",
+                    "surface": "#0f131d",
+                    "on-error": "#690005",
+                    "on-tertiary": "#00391d",
+                    "on-secondary": "#482900",
+                    "tertiary-fixed": "#88f9b0",
+                    "surface-container-high": "#262a35",
+                    "secondary": "#ffb866",
+                    "tertiary-fixed-dim": "#6bdc96",
+                    "surface-dim": "#0f131d",
+                    "inverse-surface": "#dfe2f1"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "sm": "4px",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "margin": "24px",
+                    "unit": "4px",
+                    "panel-padding": "12px",
+                    "gutter": "16px"
+            },
+            "fontFamily": {
+                    "data": ["JetBrains Mono"],
+                    "data-lg": ["JetBrains Mono"],
+                    "data-sm": ["JetBrains Mono"],
+                    "headline-lg": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "label-caps": ["JetBrains Mono"],
+                    "body-sm": ["Inter"]
+            },
+            "fontSize": {
+                    "data-lg": ["18px", {"lineHeight": "1.4", "fontWeight": "500"}],
+                    "data-sm": ["12px", {"lineHeight": "1.2", "fontWeight": "400"}],
+                    "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                    "body-lg": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "label-caps": ["11px", {"lineHeight": "1", "letterSpacing": "0.1em", "fontWeight": "700"}],
+                    "body-sm": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+    <style>
+        body {
+            background-color: #0f131d;
+            color: #dfe2f1;
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .zebra-row:nth-child(even) {
+            background-color: rgba(255, 255, 255, 0.02);
+        }
+        .led-glow-stable {
+            box-shadow: 0 0 8px #7ef0a7;
+        }
+        .scanline {
+            width: 100%;
+            height: 2px;
+            background: rgba(111, 238, 225, 0.05);
+            position: absolute;
+            animation: scan 10s linear infinite;
+            pointer-events: none;
+            z-index: 15;
+        }
+        @keyframes scan {
+            0% { top: 0; }
+            100% { top: 100%; }
+        }
+        .terminal-glow {
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.6), 0 0 15px rgba(111, 238, 225, 0.05);
+        }
+    </style>
+    <!-- Core State Integration for Staged Transaction Pattern -->
+    <script src="../core/game-state.js"></script>
+</head>
+<body class="flex flex-col h-screen font-headline select-none">
+    <nav class="shrink-0 w-full z-50 h-12 bg-surface border-b border-outline-variant flex justify-between items-center px-6">
+        <div class="flex items-center gap-4">
+            <a href="../index.html" class="flex items-center gap-2 text-primary font-data text-[12px] font-bold tracking-wider hover:bg-primary/10 px-3 py-1.5 border border-primary/30 rounded-sm transition-colors uppercase">
+                <span class="material-symbols-outlined text-[16px]">arrow_back</span>
+                RETURN TO MAIN ORBITAL HUB
+            </a>
+            <div class="w-px h-4 bg-outline-variant"></div>
+            <span class="font-data text-[11px] text-on-surface-variant tracking-wider uppercase">SECTOR: LEMBANG INDONESIA // ZEISS TRACKING DOME</span>
+        </div>
+        <div class="flex items-center gap-4 font-data text-[11px] text-on-surface-variant">
+            <span>OPTICAL_LINK: <span class="text-tertiary">STABLE</span></span>
+        </div>
+    </nav>
+
+    <main class="flex-grow flex w-full overflow-hidden">
+        <!-- Sidebar layout (Dynamic Contract Card at top) -->
+        <aside class="w-96 shrink-0 h-full border-r border-outline-variant bg-surface-container-low p-panel-padding flex flex-col gap-gutter overflow-y-auto">
+            
+            <!-- DYNAMIC ACTIVE MISSION COMPACT LOG -->
+            <section id="active-mission-section" class="bg-surface-container border border-primary/40 p-panel-padding rounded-sm relative shadow-lg">
+                <div class="absolute top-1 right-2 font-data text-[8px] text-primary animate-pulse">// ACTIVE CONTRACT</div>
+                <div class="bg-primary/10 border border-primary/20 px-2.5 py-1 mb-2.5">
+                    <h2 class="text-label-caps font-label-caps text-primary tracking-wider uppercase">ACTIVE HUB MISSION</h2>
+                </div>
+                <div class="space-y-2">
+                    <h3 id="sidebar-mission-title" class="font-bold text-[12.5px] text-on-surface leading-tight">Loading staged mission...</h3>
+                    <p id="sidebar-mission-desc" class="text-[11px] text-on-surface-variant leading-relaxed">Verifying secure communications channel...</p>
+                    <div class="flex justify-between items-center pt-2 border-t border-outline-variant/30 font-data text-[10px]">
+                        <span class="opacity-70">CONTRACT VALUE:</span>
+                        <span id="sidebar-mission-rewards" class="text-tertiary font-bold">--- CR // --- SI</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Station Profile -->
+            <section class="bg-surface-container border border-outline-variant p-panel-padding rounded-sm">
+                <div class="bg-outline-variant/30 px-2 py-0.5 mb-2">
+                    <h2 class="text-label-caps font-label-caps text-on-surface">STATION PROFILE</h2>
+                </div>
+                <div class="space-y-1">
+                    <div class="flex justify-between items-center py-0.5 zebra-row">
+                        <span class="text-label-caps font-label-caps text-on-surface-variant">IDENTIFIER</span>
+                        <span class="text-data-sm font-data-sm text-on-surface">BOSSCHA-ZEISS-01</span>
+                    </div>
+                    <div class="flex justify-between items-center py-0.5 zebra-row">
+                        <span class="text-label-caps font-label-caps text-on-surface-variant">COORDINATES</span>
+                        <span class="text-data-sm font-data-sm text-on-surface">6.8244° S, 107.6153° E</span>
+                    </div>
+                    <div class="flex justify-between items-center py-0.5 zebra-row">
+                        <span class="text-label-caps font-label-caps text-on-surface-variant">INSTRUMENT</span>
+                        <span class="text-data-sm font-data-sm text-secondary">60CM ZEISS REFRACTOR</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Urban Sky-Glow Tracker -->
+            <section class="bg-surface-container border border-outline-variant p-panel-padding rounded-sm">
+                <h2 class="text-label-caps font-label-caps text-on-surface mb-2">URBAN SKY-GLOW TRACKER</h2>
+                <div class="p-3 bg-surface-container-lowest border border-outline-variant rounded-sm space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-[11px] font-label-caps text-on-surface-variant">BORTLE SCALE</span>
+                        <span class="text-data-lg font-data-lg text-error font-bold" id="bortle-val">Class 4.5</span>
+                    </div>
+                    <div class="relative w-full h-2 bg-gradient-to-r from-teal-900 via-yellow-700 to-red-900 rounded-full overflow-hidden">
+                        <div id="bortle-marker" class="absolute top-0 bottom-0 w-1 bg-white border border-black shadow" style="left: 45%;"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Current Observation Run -->
+            <section class="bg-surface-container border border-outline-variant p-panel-padding rounded-sm flex-grow">
+                <h2 class="text-label-caps font-label-caps text-on-surface mb-2">CURRENT OBSERVATION RUN</h2>
+                <div class="space-y-2">
+                    <div class="p-2 border border-outline-variant bg-surface-container-lowest flex items-center justify-between">
+                        <div>
+                            <span class="text-[10px] font-label-caps text-on-surface-variant block">ACTIVE TARGET</span>
+                            <span class="text-data-sm font-data-sm text-primary font-bold">ALPHA CENTAURI AB</span>
+                        </div>
+                        <span class="material-symbols-outlined text-primary text-sm">track_changes</span>
+                    </div>
+                    <div class="p-2 border border-outline-variant bg-surface-container-lowest">
+                        <span class="text-[10px] font-label-caps text-on-surface-variant block mb-1">RIGHT ASCENSION / DECLINATION</span>
+                        <div class="font-data-sm text-[11px] flex justify-between text-on-surface">
+                            <span>RA: 14h 39m 36s</span>
+                            <span>DEC: -60° 50' 02"</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </aside>
+
+        <!-- Dynamic Game Photometer Viewport -->
+        <div id="bosscha-viewport" class="flex-grow h-full border border-outline-variant flex flex-col items-center justify-between p-6 relative bg-[#04060b] overflow-hidden">
+            <div class="scanline"></div>
+            <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(111,238,225,0.02)_0%,transparent_80%)] pointer-events-none"></div>
+
+            <!-- Top Header Console -->
+            <div class="w-full max-w-[650px] flex justify-between items-center z-10 bg-surface-container/60 border border-outline-variant/40 px-4 py-2 rounded-sm backdrop-blur-sm">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary text-sm animate-pulse">radar</span>
+                    <span class="font-data text-[10px] text-primary uppercase font-bold tracking-wider">ZEISS STARFIELD PHOTOMETRY VIEWPORT</span>
+                </div>
+                <span id="chrono-sync-telemetry" class="font-data text-[10px] text-on-surface-variant font-bold tracking-wide uppercase">PHOTOMETER: ACTIVE SEARCH</span>
+            </div>
+
+            <!-- Main Canvas Area: Viewing Panel and Light Curve stacked -->
+            <div class="flex-grow w-full max-w-[650px] flex flex-col gap-4 items-center justify-center my-4 z-10 relative">
+                
+                <div class="w-full flex flex-col gap-4">
+                    <!-- Viewfinder Canvas -->
+                    <div class="relative w-full border border-outline-variant/40 bg-surface-container-lowest/90 p-1 rounded-sm shadow-2xl">
+                        <canvas id="photometerCanvas" width="550" height="220" class="w-full aspect-[5/2] cursor-crosshair block bg-[#03060c]"></canvas>
+                        <div class="absolute top-3 left-4 font-data text-[8px] text-primary/60 pointer-events-none uppercase">FOCAL PLANE TARGET VIEWPORT // GRID_MODE: STABLE</div>
+                        <div class="absolute top-3 right-4 font-data text-[8px] text-on-surface-variant pointer-events-none">FOV: 0.15°</div>
+                    </div>
+
+                    <!-- Plotter Canvas -->
+                    <div class="relative w-full border border-outline-variant/40 bg-surface-container-lowest/90 p-1 rounded-sm shadow-2xl">
+                        <canvas id="plotterCanvas" width="550" height="150" class="w-full aspect-[11/3] block bg-[#020408]"></canvas>
+                        <div class="absolute top-3 left-4 font-data text-[8px] text-primary/60 pointer-events-none uppercase">LIGHT CURVE SCROLLING PLOTTER // PHOTON LUMINOSITY TYPE-B</div>
+                        <div class="absolute top-3 right-4 font-data text-[8px] text-secondary pointer-events-none font-bold" id="luminosity-text">100.00%</div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Lower Controls / Timing Trigger Console -->
+            <div id="controls-console" class="w-full max-w-[650px] bg-surface-container border border-outline-variant/50 p-4 rounded-sm z-10 shadow-lg flex flex-col gap-3 transition-colors duration-300">
+                <div class="flex justify-between items-center text-[10px] font-data border-b border-outline-variant/30 pb-2">
+                    <span class="text-on-surface-variant uppercase tracking-wider">// PHOTOMETRIC CHRONO-ALIGNMENT SYSTEM</span>
+                    <span id="transit-phase-text" class="text-on-surface-variant font-bold uppercase">TRANSIT DURATION: OUT OF TRANSIT</span>
+                </div>
+                
+                <div class="flex items-center gap-4">
+                    <!-- Telemetry logs on the left -->
+                    <div class="flex-grow bg-surface-container-lowest border border-outline-variant/40 p-2.5 rounded-sm h-[44px] flex items-center transition-all duration-300">
+                        <div id="chrono-logs" class="font-data text-[10px] text-on-surface-variant tracking-wide w-full truncate">
+                            READY FOR TRANSIT CAPTURE. WATCH FOR LUMINOSITY DIP.
+                        </div>
+                    </div>
+
+                    <!-- LOG TRANSIT DATA Button -->
+                    <button id="btn-log-transit" class="px-6 py-2.5 bg-primary hover:bg-primary-container text-surface font-data text-[11px] font-bold tracking-wider rounded-sm transition-all uppercase flex-shrink-0">
+                        [ LOG TRANSIT DATA ]
+                    </button>
+                </div>
+            </div>
+
+            <!-- Complete Transmit Overlay (Hidden initially) -->
+            <div id="photometer-complete-overlay" class="hidden absolute inset-0 bg-surface-container-lowest/95 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center select-none z-30">
+                <div class="w-[450px] bg-surface-container border border-tertiary/40 p-6 rounded-sm space-y-5 shadow-2xl terminal-glow">
+                    <span class="material-symbols-outlined text-tertiary text-5xl animate-bounce">published_with_changes</span>
+                    <h2 class="text-lg font-bold font-headline text-tertiary tracking-wide uppercase">ZEISS PHOTOMETRY CAPTURE VERIFIED</h2>
+                    <p class="font-data text-[11px] text-on-surface-variant leading-relaxed">
+                        The photometer has successfully aligned and logged the exoplanetary transit minima point. Data packets are secure.
+                    </p>
+                    <button onclick="transmitPhotometryData()" class="w-full py-2.5 bg-tertiary hover:bg-tertiary/80 text-surface font-data text-[11px] font-bold tracking-wider rounded-sm transition-all uppercase animate-pulse">
+                        [ TRANSMIT TRANSIT DATA TO HQ ]
+                    </button>
+                </div>
+            </div>
+
+            <div class="absolute bottom-1 right-2 font-data text-[7px] text-on-surface-variant/40 tracking-wider">
+                ZEISS STARFIELD CONTROL CONSOLE v2.08
+            </div>
+        </div>
+    </main>
+
+    <footer class="h-8 bg-surface-container border-t border-outline-variant flex justify-between items-center px-6 shrink-0 z-50">
+        <div class="flex items-center gap-4">
+            <span class="text-label-caps font-label-caps text-on-surface-variant">STATION_ALPHA-01 // TELEMETRY FEED</span>
+            <div class="flex gap-4 items-center">
+                <span class="text-data-sm font-data-sm text-tertiary flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-tertiary led-glow-stable animate-pulse"></span>
+                    POWER: 98.4%
+                </span>
+                <span class="text-data-sm font-data-sm text-tertiary text-[10px]">SENSORS: ACTIVE</span>
+                <span class="text-data-sm font-data-sm text-tertiary text-[10px]">DATA_LINK: ESTABLISHED</span>
+            </div>
+        </div>
+        <div class="flex gap-4 font-label-caps text-label-caps text-on-surface-variant">
+            <span class="hover:bg-surface-variant px-2 transition-colors cursor-pointer text-data-sm">DIAGNOSTICS</span>
+            <span class="hover:bg-surface-variant px-2 transition-colors cursor-pointer text-data-sm">LOG_EXPORT</span>
+        </div>
+    </footer>
+
+    <script>
+        // 1. STATE & SECURITY CHECK (Staged Transaction Pattern Safeguards)
+        let activePayload = null;
+
+        function verifyAndLoadState() {
+            const serialized = localStorage.getItem('active_mission_payload');
+            if (!serialized) {
+                // No mission staged; gracefully fallback to ground control launcher
+                window.location.href = '../index.html';
+                return;
+            }
+            try {
+                activePayload = JSON.parse(serialized);
+                if (!activePayload || !activePayload.missionId) {
+                    window.location.href = '../index.html';
+                    return;
+                }
+            } catch (e) {
+                console.error("Payload decoding failure", e);
+                window.location.href = '../index.html';
+                return;
+            }
+
+            // Populate Sidebar Active Mission telemetry card
+            document.getElementById('sidebar-mission-title').innerText = activePayload.objectiveText.toUpperCase();
+            document.getElementById('sidebar-mission-desc').innerText = `Locked on target transit candidates. Align photometer capturing mechanisms within the lowest 3% transit minima point to verify habitable indices.`;
+            document.getElementById('sidebar-mission-rewards').innerText = `+${activePayload.creditReward} CR // +${activePayload.intelReward} SI`;
+        }
+
+        // Run state safeguard checks immediately upon parsing
+        verifyAndLoadState();
+
+        // 2. Micro-interaction: Sky-Glow Slider Interaction
+        let bortlePos = 42;
+        let direction = 1;
+        const marker = document.getElementById('bortle-marker');
+        const valLabel = document.getElementById('bortle-val');
+
+        function updateBortle() {
+            if (bortlePos > 60) direction = -1;
+            if (bortlePos < 30) direction = 1;
+            
+            bortlePos += (Math.random() * 0.1) * direction;
+            if (marker) marker.style.left = bortlePos + '%';
+            
+            const currentClass = (bortlePos / 10).toFixed(1);
+            if (valLabel) valLabel.innerText = `Class ${currentClass}`;
+            
+            requestAnimationFrame(updateBortle);
+        }
+        setTimeout(updateBortle, 1000);
+
+        // 3. MATH-DRIVEN STARLIGHT PHOTOMETER CANVAS GAME
+        const canvas = document.getElementById('photometerCanvas');
+        const plotter = document.getElementById('plotterCanvas');
+
+        if (canvas && plotter) {
+            const ctx = canvas.getContext('2d');
+            const pCtx = plotter.getContext('2d');
+
+            const cw = canvas.width;
+            const ch = canvas.height;
+            const cx = cw / 2;
+            const cy = ch / 2;
+
+            const pw = plotter.width;
+            const ph = plotter.height;
+
+            let time = 0;
+            let frameCounter = 0;
+            const transitPeriod = 600; // Orbit takes ~10 seconds at 60fps
+            let gameFinished = false;
+
+            // Generate Twinkling Background Stars
+            const bgStars = [];
+            for (let i = 0; i < 28; i++) {
+                bgStars.push({
+                    x: Math.random() * cw,
+                    y: Math.random() * ch,
+                    size: 0.5 + Math.random() * 1.3,
+                    alpha: 0.15 + Math.random() * 0.85,
+                    twinkleSpeed: 0.008 + Math.random() * 0.012
+                });
+            }
+
+            // Luminosity Scrolling Buffer
+            const maxHistory = 480;
+            const history = [];
+            // Pre-fill history to map flat 100% baseline curve initially
+            for (let i = 0; i < maxHistory; i++) {
+                history.push(1.0);
+            }
+
+            // Click Handler
+            const btnLog = document.getElementById('btn-log-transit');
+            const chronoLogs = document.getElementById('chrono-logs');
+            const syncText = document.getElementById('chrono-sync-telemetry');
+            const controlsConsole = document.getElementById('controls-console');
+
+            btnLog.addEventListener('click', () => {
+                if (gameFinished) return;
+
+                // Re-calculate distance logic on click frame to maintain strict precision
+                let progress = (frameCounter % transitPeriod) / transitPeriod;
+                let px = progress * (cw + 120) - 60;
+                let dist = Math.abs(px - cx);
+                const transitRadius = 60;
+                let baseLuminosity = 1.0;
+
+                if (dist < transitRadius) {
+                    let normDist = dist / transitRadius;
+                    // Parabolic U-shape dip
+                    baseLuminosity = 1.0 - 0.25 * (1.0 - normDist * normDist);
+                }
+
+                // Check lowest 3% bottom floor threshold (baseLuminosity <= 0.7575)
+                if (baseLuminosity <= 0.7575) {
+                    // Success!
+                    gameFinished = true;
+
+                    syncText.innerText = "ALIGNMENT SYNCED // DATA VERIFIED";
+                    syncText.className = "font-data text-[10px] text-tertiary font-bold tracking-wide";
+
+                    chronoLogs.innerText = `[SUCCESS] TRANSIT MINIMA CAPTURED AT ${(baseLuminosity * 100).toFixed(2)}% LUMINOSITY. TRANSMITTING TO MEMORY.`;
+                    chronoLogs.parentElement.className = "flex-grow bg-surface-container-lowest border border-tertiary p-2.5 rounded-sm h-[44px] flex items-center shadow-[0_0_8px_rgba(126,240,167,0.15)]";
+                    chronoLogs.className = "font-data text-[10px] text-tertiary tracking-wide font-bold";
+
+                    // Update controls button
+                    btnLog.disabled = true;
+                    btnLog.className = "px-6 py-2.5 bg-outline-variant text-on-surface-variant font-data text-[11px] font-bold tracking-wider rounded-sm transition-all uppercase flex-shrink-0 cursor-not-allowed";
+
+                    // Launch complete overlay modal
+                    setTimeout(() => {
+                        const overlay = document.getElementById('photometer-complete-overlay');
+                        if (overlay) {
+                            overlay.classList.remove('hidden');
+                        }
+                    }, 1200);
+
+                } else {
+                    // Timing missed (either too early or too late)
+                    chronoLogs.innerText = "[ERROR] CHRONO-ALIGNMENT MISSED // TRANSIT DATA INCOMPLETE";
+                    
+                    // Flash parent container with a brief white border & white glow (abrupt duration-75)
+                    chronoLogs.parentElement.className = "flex-grow bg-surface-container-lowest border border-white p-2.5 rounded-sm h-[44px] flex items-center shadow-[0_0_12px_rgba(255,255,255,0.7)] transition-all duration-75";
+                    chronoLogs.className = "font-data text-[10px] text-white tracking-wide font-bold uppercase";
+
+                    // Decay the flash smoothly back to warning error color after 600ms
+                    setTimeout(() => {
+                        if (!gameFinished) {
+                            chronoLogs.parentElement.className = "flex-grow bg-surface-container-lowest border border-error/50 p-2.5 rounded-sm h-[44px] flex items-center transition-all duration-500";
+                            chronoLogs.className = "font-data text-[10px] text-error tracking-wide font-bold animate-pulse";
+                        }
+                    }, 600);
+
+                    // Shake/Flash visual feedback on control console card
+                    controlsConsole.classList.add('border-error/80', 'bg-error-container/10');
+                    setTimeout(() => {
+                        controlsConsole.classList.remove('border-error/80', 'bg-error-container/10');
+                    }, 500);
+
+                    // Reset transit loop progression back to the start of the orbit sequence (px = -60)
+                    // This lets the player immediately try again without waiting out the full orbital loop!
+                    frameCounter = Math.floor(frameCounter / transitPeriod) * transitPeriod;
+                }
+            });
+
+            function render() {
+                // Update math data for game loops
+                time += 0.035;
+
+                let progress = 0;
+                let px = -100;
+                let py = cy;
+                let dist = 1000;
+                const transitRadius = 60;
+                let baseLuminosity = 1.0;
+
+                if (!gameFinished) {
+                    frameCounter++;
+                    progress = (frameCounter % transitPeriod) / transitPeriod;
+                    px = progress * (cw + 120) - 60;
+                    dist = Math.abs(px - cx);
+
+                    // Compute smooth parabolic curve dip
+                    if (dist < transitRadius) {
+                        let normDist = dist / transitRadius;
+                        baseLuminosity = 1.0 - 0.25 * (1.0 - normDist * normDist);
+                    }
+
+                    // Add minor scintillation noise
+                    let noise = (Math.random() - 0.5) * 0.003;
+                    let currentLuminosity = baseLuminosity + noise;
+
+                    // Update side metrics and logging texts
+                    document.getElementById('luminosity-text').innerText = `${(currentLuminosity * 100).toFixed(2)}%`;
+
+                    // Push to scrolling buffer
+                    history.push(currentLuminosity);
+                    if (history.length > maxHistory) {
+                        history.shift();
+                    }
+
+                    // Sync telemetry status texts
+                    const phaseText = document.getElementById('transit-phase-text');
+                    if (dist < transitRadius) {
+                        let percentOverlap = ((1 - dist / transitRadius) * 100).toFixed(0);
+                        phaseText.innerText = `TRANSIT IN PROGRESS // INGRESS OVERLAP: ${percentOverlap}%`;
+                        phaseText.className = "text-secondary font-bold uppercase animate-pulse";
+
+                        if (baseLuminosity <= 0.7575) {
+                            syncText.innerText = "ALIGNMENT SYNC READY // CLICK LOG NOW!";
+                            syncText.className = "font-data text-[10px] text-tertiary font-bold tracking-wide animate-bounce";
+                        } else {
+                            syncText.innerText = "IN TRANSIT // LOCKING INDEX";
+                            syncText.className = "font-data text-[10px] text-secondary font-bold tracking-wide";
+                        }
+                    } else {
+                        phaseText.innerText = "TRANSIT DURATION: OUT OF TRANSIT";
+                        phaseText.className = "text-on-surface-variant uppercase";
+                        syncText.innerText = "PHOTOMETER: ACTIVE SEARCH";
+                        syncText.className = "font-data text-[10px] text-on-surface-variant font-bold tracking-wide";
+                    }
+                } else {
+                    // Freezes planet inside the minima during completion state
+                    progress = 0.5;
+                    px = cx;
+                    dist = 0;
+                    baseLuminosity = 0.75;
+                }
+
+                // --- DRAWING CANVAS 1: VIEWFINDER ---
+                ctx.clearRect(0, 0, cw, ch);
+                ctx.fillStyle = '#03060c';
+                ctx.fillRect(0, 0, cw, ch);
+
+                // Twinkling background stars
+                bgStars.forEach(s => {
+                    s.alpha += s.twinkleSpeed;
+                    if (s.alpha > 1 || s.alpha < 0.2) s.twinkleSpeed = -s.twinkleSpeed;
+                    ctx.save();
+                    ctx.fillStyle = `rgba(255, 255, 255, ${s.alpha})`;
+                    ctx.beginPath();
+                    ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                });
+
+                // Viewing coordinate grid
+                ctx.save();
+                ctx.strokeStyle = 'rgba(111, 238, 225, 0.08)';
+                ctx.lineWidth = 1;
+                [40, 85, 150].forEach(r => {
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+                    ctx.stroke();
+                });
+
+                // Add precise monospaced coordinate indicators along the horizontal gridline
+                ctx.fillStyle = 'rgba(111, 238, 225, 0.35)';
+                ctx.font = '7px "JetBrains Mono"';
+                ctx.fillText("0.04°", cx + 42, cy - 3);
+                ctx.fillText("0.08°", cx + 87, cy - 3);
+                ctx.fillText("0.15°", cx + 152, cy - 3);
+                ctx.fillText("-0.04°", cx - 68, cy - 3);
+                ctx.fillText("-0.08°", cx - 113, cy - 3);
+                ctx.fillText("-0.15°", cx - 178, cy - 3);
+
+                ctx.setLineDash([4, 4]);
+                ctx.beginPath();
+                ctx.moveTo(0, cy); ctx.lineTo(cw, cy);
+                ctx.moveTo(cx, 0); ctx.lineTo(cx, ch);
+                ctx.stroke();
+                ctx.restore();
+
+                // Prominent glowing target star
+                let pulseFactor = 1 + 0.05 * Math.sin(time * 3);
+                let starRadius = 13 * pulseFactor;
+
+                ctx.save();
+                ctx.fillStyle = 'rgba(111, 238, 225, 0.03)';
+                ctx.beginPath();
+                ctx.arc(cx, cy, starRadius * 3.8, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = 'rgba(111, 238, 225, 0.12)';
+                ctx.beginPath();
+                ctx.arc(cx, cy, starRadius * 2.3, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = 'rgba(111, 238, 225, 0.35)';
+                ctx.beginPath();
+                ctx.arc(cx, cy, starRadius * 1.4, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(cx, cy, starRadius * 0.7, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+
+                // Transit planetary asset
+                ctx.save();
+                ctx.shadowColor = 'rgba(111, 238, 225, 0.6)';
+                ctx.shadowBlur = 5;
+                ctx.fillStyle = '#050811';
+                ctx.strokeStyle = 'rgba(111, 238, 225, 0.5)';
+                ctx.lineWidth = 1.2;
+                ctx.beginPath();
+                ctx.arc(px, py, 7.5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+                ctx.restore();
+
+                // Target Lock brackets around planet during alignment
+                if (dist < 15 && !gameFinished) {
+                    ctx.save();
+                    ctx.strokeStyle = '#7ef0a7';
+                    ctx.lineWidth = 1.5;
+                    ctx.beginPath();
+                    ctx.arc(px, py, 14, 0, Math.PI * 2);
+                    ctx.stroke();
+                    ctx.restore();
+                }
+
+                // Frame outline border
+                ctx.save();
+                ctx.strokeStyle = 'rgba(111, 238, 225, 0.15)';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(0, 0, cw, ch);
+                ctx.restore();
+
+
+                // --- DRAWING CANVAS 2: PLOTTER ---
+                pCtx.clearRect(0, 0, pw, ph);
+                pCtx.fillStyle = '#020408';
+                pCtx.fillRect(0, 0, pw, ph);
+
+                // Helper scale values
+                // Maps 1.0 (100%) to Y = 35; 0.70 (70%) to Y = 125
+                function valToY(v) {
+                    return 35 + (1.0 - v) * 300;
+                }
+
+                // Reference grid levels
+                pCtx.save();
+                pCtx.strokeStyle = 'rgba(111, 238, 225, 0.05)';
+                pCtx.lineWidth = 1;
+
+                const levels = [
+                    { val: 1.00, label: "100.0% BASE" },
+                    { val: 0.90, label: "90.0%" },
+                    { val: 0.80, label: "80.0%" },
+                    { val: 0.75, label: "75.0% MIN" }
+                ];
+
+                levels.forEach(lvl => {
+                    let y = valToY(lvl.val);
+                    pCtx.beginPath();
+                    pCtx.moveTo(20, y);
+                    pCtx.lineTo(pw - 20, y);
+                    pCtx.stroke();
+
+                    pCtx.font = '7px "JetBrains Mono"';
+                    pCtx.fillStyle = 'rgba(111, 238, 225, 0.3)';
+                    pCtx.fillText(lvl.label, 25, y - 4);
+                });
+
+                // Minima Target Shaded Band (Lowest 3% Floor of 25% dip => 75% - 75.75%)
+                let minZoneY1 = valToY(0.75);
+                let minZoneY2 = valToY(0.7575);
+                
+                pCtx.fillStyle = gameFinished ? 'rgba(126, 240, 167, 0.1)' : 'rgba(255, 184, 102, 0.05)';
+                pCtx.fillRect(20, minZoneY2, pw - 40, minZoneY1 - minZoneY2);
+
+                pCtx.strokeStyle = gameFinished ? 'rgba(126, 240, 167, 0.25)' : 'rgba(255, 184, 102, 0.15)';
+                pCtx.setLineDash([2, 2]);
+                pCtx.beginPath();
+                pCtx.moveTo(20, minZoneY2); pCtx.lineTo(pw - 20, minZoneY2);
+                pCtx.stroke();
+                
+                pCtx.font = '7px "JetBrains Mono"';
+                pCtx.fillStyle = gameFinished ? 'rgba(126, 240, 167, 0.6)' : 'rgba(255, 184, 102, 0.5)';
+                pCtx.fillText("TRANSIT MINIMA LOCK ZONE", pw - 150, minZoneY1 - 4);
+                pCtx.restore();
+
+                // Draw historical scrolling starlight line
+                if (history.length > 1) {
+                    pCtx.save();
+                    pCtx.lineWidth = gameFinished ? 2.5 : 1.5;
+                    pCtx.strokeStyle = gameFinished ? '#7ef0a7' : 'rgba(111, 238, 225, 0.85)';
+                    pCtx.shadowColor = gameFinished ? '#7ef0a7' : 'rgba(111, 238, 225, 0.4)';
+                    pCtx.shadowBlur = gameFinished ? 8 : 4;
+
+                    pCtx.beginPath();
+                    for (let i = 0; i < history.length; i++) {
+                        let x = 20 + i * ((pw - 40) / maxHistory);
+                        let y = valToY(history[i]);
+
+                        if (i === 0) {
+                            pCtx.moveTo(x, y);
+                        } else {
+                            pCtx.lineTo(x, y);
+                        }
+                    }
+                    pCtx.stroke();
+                    pCtx.restore();
+                }
+
+                // Drawing scan tracker bar
+                if (!gameFinished) {
+                    let scanX = 20 + (history.length % maxHistory) * ((pw - 40) / maxHistory);
+                    pCtx.save();
+                    pCtx.strokeStyle = 'rgba(111, 238, 225, 0.25)';
+                    pCtx.lineWidth = 1;
+                    pCtx.beginPath();
+                    pCtx.moveTo(scanX, 15);
+                    pCtx.lineTo(scanX, ph - 15);
+                    pCtx.stroke();
+                    pCtx.restore();
+                }
+
+                // Plotter border line
+                pCtx.save();
+                pCtx.strokeStyle = 'rgba(111, 238, 225, 0.15)';
+                pCtx.lineWidth = 1;
+                pCtx.strokeRect(0, 0, pw, ph);
+                pCtx.restore();
+
+                requestAnimationFrame(render);
+            }
+
+            // Launch frames animation rendering loops
+            render();
+        }
+
+        // Close contract, distribute wallet credits/science, clear payload, and route back to hub
+        function transmitPhotometryData() {
+            if (window.GameState) {
+                const completeSuccess = window.GameState.completeActiveMission();
+                if (completeSuccess) {
+                    window.location.href = '../index.html';
+                } else {
+                    console.error("Failed to complete staged contract rewards.");
+                    window.location.href = '../index.html';
+                }
+            } else {
+                window.location.href = '../index.html';
+            }
+        }
+    </script>
+</body>
+</html>
