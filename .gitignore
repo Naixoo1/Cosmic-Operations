@@ -44,3 +44,6 @@ coverage/
 logs/
 .system_generated/
 .gemini/
+
+# 5. Core Gameplay Anchors (NASA Priority Directives)
+gemini.md
