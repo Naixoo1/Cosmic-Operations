@@ -312,7 +312,6 @@
     </footer>
 
     <script>
-    <script>
         // 1. STATE & SECURITY CHECK (Staged Transaction Pattern Safeguards)
         let activePayload = null;
         let finishedPhase = false;
@@ -329,17 +328,19 @@
                 window.location.href = '../index.html';
                 return;
             }
+            let activeMission = null;
             try {
-                activePayload = JSON.parse(serialized);
-                if (!activePayload || !activePayload.missionId || !activePayload.objectives || !Array.isArray(activePayload.objectives) || activePayload.objectives.length === 0) {
-                    window.location.href = '../index.html';
-                    return;
-                }
+                activeMission = JSON.parse(localStorage.getItem("active_mission_payload"));
             } catch (e) {
                 console.error("Payload decoding failure", e);
-                window.location.href = '../index.html';
+            }
+
+            if (!activeMission || activeMission.stationId !== "atacama") {
+                window.location.href = "../index.html";
                 return;
             }
+
+            activePayload = activeMission;
 
             // Simple deterministic seed based on missionId string
             let seed = 0;
@@ -358,9 +359,11 @@
             targetNoise = seededRandom(20, 80);
 
             // Populate Sidebar Active Mission telemetry card
+            const creditVal = activeMission.totalCreditReward || 0;
+            const intelVal = activeMission.totalIntelReward || 0;
             document.getElementById('sidebar-mission-title').innerText = activePayload.objectiveText.toUpperCase();
             document.getElementById('sidebar-mission-desc').innerText = `Cosmic interferences detected in millimeter band frequencies. Manipulate Amplitude and Frequency variables below to match telemetry.`;
-            document.getElementById('sidebar-mission-rewards').innerText = `+${activePayload.creditReward} CR // +${activePayload.intelReward} SI`;
+            document.getElementById('sidebar-mission-rewards').innerText = `+${creditVal} CR // +${intelVal} SI`;
 
             // Adjust sliders container grid columns and noise box visibility if noise objective exists
             const noiseBox = document.getElementById('noise-slider-box');
@@ -441,8 +444,8 @@
             }
         }
 
-        // Run state safeguard checks immediately upon parsing
-        verifyAndLoadState();
+        // Run state safeguard checks inside page-load event listener
+        window.addEventListener('load', verifyAndLoadState);
 
         // 2. Micro-interactions: Updating throughput data in sidebar
         const throughputEl = document.getElementById('throughput');
@@ -473,6 +476,10 @@
             const telemetryText = document.getElementById('sync-telemetry');
 
             function renderOscilloscope() {
+                if (!activePayload) {
+                    requestAnimationFrame(renderOscilloscope);
+                    return;
+                }
                 // Draw Screen Backdrop Grid (CRT Monitor Aesthetics)
                 ctx.fillStyle = '#060a12';
                 ctx.fillRect(0, 0, cw, ch);

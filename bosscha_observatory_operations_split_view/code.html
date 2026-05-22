@@ -352,23 +352,19 @@
         }
 
         function verifyAndLoadState() {
-            const serialized = localStorage.getItem('active_mission_payload');
-            if (!serialized) {
-                // No mission staged; gracefully fallback to ground control launcher
-                window.location.href = '../index.html';
-                return;
-            }
+            let activeMission = null;
             try {
-                activePayload = JSON.parse(serialized);
-                if (!activePayload || !activePayload.missionId || !activePayload.objectives || !Array.isArray(activePayload.objectives) || activePayload.objectives.length === 0) {
-                    window.location.href = '../index.html';
-                    return;
-                }
+                activeMission = JSON.parse(localStorage.getItem("active_mission_payload"));
             } catch (e) {
                 console.error("Payload decoding failure", e);
-                window.location.href = '../index.html';
+            }
+
+            if (!activeMission || activeMission.stationId !== "bosscha") {
+                window.location.href = "../index.html";
                 return;
             }
+
+            activePayload = activeMission;
 
             // Simple deterministic seed based on missionId string
             let seed = 0;
@@ -388,9 +384,11 @@
             targetStarY = 110 + seededRandom(-25, 25);
 
             // Populate Sidebar Active Mission telemetry card
+            const creditVal = activeMission.totalCreditReward || 0;
+            const intelVal = activeMission.totalIntelReward || 0;
             document.getElementById('sidebar-mission-title').innerText = activePayload.objectiveText.toUpperCase();
             document.getElementById('sidebar-mission-desc').innerText = `Locked on target transit candidates. Align photometer capturing mechanisms within the lowest 3% transit minima point to verify habitable indices.`;
-            document.getElementById('sidebar-mission-rewards').innerText = `+${activePayload.creditReward} CR // +${activePayload.intelReward} SI`;
+            document.getElementById('sidebar-mission-rewards').innerText = `+${creditVal} CR // +${intelVal} SI`;
 
             // Toggle calibration box if objective is present
             const hasCalibrate = activePayload.objectives.some(o => o.id === 'bs_calibrate');
@@ -471,8 +469,8 @@
             }
         }
 
-        // Run state safeguard checks immediately upon parsing
-        verifyAndLoadState();
+        // Run state safeguard checks inside page-load event listener
+        window.addEventListener('load', verifyAndLoadState);
 
         // 2. Micro-interaction: Sky-Glow Slider Interaction
         let bortlePos = 42;
@@ -716,6 +714,10 @@
             });
 
             function render() {
+                if (!activePayload) {
+                    requestAnimationFrame(render);
+                    return;
+                }
                 // Update math data for game loops
                 time += 0.035;
 

@@ -262,10 +262,18 @@
                 stationId: mission.site,
                 objectiveText: mission.title,
                 creditReward: mission.rewardCredits,
+                totalCreditReward: mission.rewardCredits,
                 intelReward: mission.rewardScience,
+                totalIntelReward: mission.rewardScience,
+                scienceReward: mission.rewardScience,
                 safetyReward: mission.rewardSafety,
                 tier: mission.tier || 'standard',
-                objectives: mission.objectives || []
+                objectives: (mission.objectives || []).map((obj, idx) => ({
+                    id: obj.id || `obj-${idx}-${Date.now()}`,
+                    text: obj.text || `Objective ${idx + 1}`,
+                    isCompleted: typeof obj.isCompleted === 'boolean' ? obj.isCompleted : false,
+                    payoutShare: typeof obj.payoutShare === 'number' ? obj.payoutShare : 0.50
+                }))
             };
 
             localStorage.setItem('active_mission_payload', JSON.stringify(payload));
