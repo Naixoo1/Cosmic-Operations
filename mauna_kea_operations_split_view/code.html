@@ -175,7 +175,7 @@
                     <p id="sidebar-mission-desc" class="text-[11px] text-on-surface-variant leading-relaxed">Verifying secure communications channel...</p>
                     <div class="flex justify-between items-center pt-2 border-t border-outline-variant/30 font-data text-[10px]">
                         <span class="opacity-70">CONTRACT VALUE:</span>
-                        <span id="sidebar-mission-rewards" class="text-tertiary font-bold">--- CR // --- SI</span>
+                        <span id="sidebar-mission-rewards" class="text-tertiary font-bold active-contract-value">--- CR // --- SI</span>
                     </div>
                     <div class="objective-box"><span class="label">// MISSION OBJECTIVES</span><ul id="mauna-kea-checklist" style="list-style:none; padding:0; margin:10px 0;"></ul></div>
                 </div>
@@ -211,7 +211,7 @@
                     </button>
                 </div>
                 <div class="p-2 border border-outline-variant bg-surface-container-lowest flex items-center justify-between">
-                    <span class="text-label-caps font-label-caps text-on-surface-variant">STATUS: <span id="lgs-status" class="text-primary">CHARGED</span></span>
+                    <span class="text-label-caps font-label-caps text-on-surface-variant">STATUS: <span id="lgs-status" class="text-primary adaptive-optics-status-text">CHARGED</span></span>
                     <span class="material-symbols-outlined text-primary text-sm led-pulse">gps_fixed</span>
                 </div>
             </section>
@@ -252,7 +252,7 @@
             <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(111,238,225,0.02)_0%,transparent_80%)] pointer-events-none"></div>
 
             <!-- Interative Canvas -->
-            <canvas id="atmosphereCanvas" width="550" height="400" class="border border-outline-variant/40 bg-surface-container-lowest/80 rounded-sm cursor-crosshair relative shadow-2xl w-full max-w-[650px] aspect-[11/8] z-10"></canvas>
+            <canvas id="sweeperCanvas" width="550" height="400" class="border border-outline-variant/40 bg-surface-container-lowest/80 rounded-sm cursor-crosshair relative shadow-2xl w-full max-w-[650px] aspect-[11/8] z-10"></canvas>
 
             <!-- Complete Transmit Overlay (Hidden initially) -->
             <div id="purity-complete-overlay" class="hidden absolute inset-0 bg-surface-container-lowest/90 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center select-none z-30">
@@ -276,7 +276,7 @@
                 </div>
                 <div class="flex justify-between items-center">
                     <span class="opacity-60">ATMOSPHERIC PURITY:</span>
-                    <span id="purity-telemetry-text" class="text-tertiary font-bold text-xs ml-4">0%</span>
+                    <span id="purity-telemetry-text" class="text-tertiary font-bold text-xs ml-4 purity-percentage-readout">0%</span>
                 </div>
                 <div class="w-28 h-1.5 bg-surface-container-low border border-outline-variant/40 p-px rounded-sm mt-0.5">
                     <div id="purity-telemetry-bar" class="h-full bg-tertiary rounded-sm" style="width: 0%"></div>
@@ -303,84 +303,8 @@
         </div>
     </footer>
 
+    <!-- Wavefront Error Telemetry & AO Priming Interface Scripts -->
     <script>
-        // 1. STATE & SECURITY CHECK (Staged Transaction Pattern Safeguards)
-        let activePayload = null;
-        let gameFinished = false;
-        
-        function renderMaunaKeaObjectives() {
-            let activeMission = null;
-            try {
-                activeMission = JSON.parse(localStorage.getItem("active_mission_payload"));
-            } catch (e) {
-                console.error("Payload decoding failure", e);
-            }
-
-            if (!activeMission || activeMission.stationId !== "mauna_kea") {
-                window.location.href = "../index.html";
-                return;
-            }
-
-            activePayload = activeMission;
-
-            // Populate Sidebar Active Mission telemetry card
-            const creditVal = activeMission.totalCreditReward || 0;
-            const intelVal = activeMission.totalIntelReward || 0;
-            document.getElementById('sidebar-mission-title').innerText = activePayload.objectiveText.toUpperCase();
-            document.getElementById('sidebar-mission-desc').innerText = `Target coordinates locked. Conduct manual cleaning parameters across all elevation profiles to clear orbital debris and air soot.`;
-            document.getElementById('sidebar-mission-rewards').innerText = `+${creditVal} CR // +${intelVal} SI`;
-
-            const listContainer = document.getElementById('mauna-kea-checklist');
-            if (listContainer) {
-                listContainer.innerHTML = '';
-                activePayload.objectives.forEach((obj) => {
-                    const isCompleted = obj.isCompleted;
-                    const li = document.createElement('li');
-                    
-                    // Display status and description, e.g., "[ ] Purify Troposphere Layer"
-                    const statusPrefix = isCompleted ? "[X]" : "[ ]";
-                    li.innerText = `${statusPrefix} ${obj.text}`;
-                    
-                    // Styling
-                    li.className = "font-data text-[11px] py-1 transition-all";
-                    if (isCompleted) {
-                        li.style.color = '#7ef0a7'; // bright neon green
-                        li.style.textDecoration = 'line-through';
-                    } else {
-                        li.style.color = '#dfe2f1';
-                        li.style.textDecoration = 'none';
-                    }
-                    listContainer.appendChild(li);
-                });
-            }
-
-            updateProgressBar();
-        }
-
-        function updateProgressBar() {
-            if (!activePayload || !activePayload.objectives || activePayload.objectives.length === 0) return;
-            
-            // Calculate overall progress using exact formula:
-            // (Number of objectives where isCompleted === true / Total number of objectives in the active payload array) * 100
-            const total = activePayload.objectives.length;
-            const completed = activePayload.objectives.filter(o => o.isCompleted === true).length;
-            const percentage = (completed / total) * 100;
-            const percentageInt = Math.floor(percentage);
-
-            const textEl = document.getElementById('purity-telemetry-text');
-            const barEl = document.getElementById('purity-telemetry-bar');
-            if (textEl) textEl.innerText = `${percentageInt}%`;
-            if (barEl) barEl.style.width = `${percentageInt}%`;
-
-            if (percentageInt >= 100 && !gameFinished) {
-                gameFinished = true;
-                triggerPurityMetricsUnlock();
-            }
-        }
-
-        // Run state safeguard checks inside page-load event listener
-        window.addEventListener('load', renderMaunaKeaObjectives);
-
         // 2. Micro-interaction: Live Atmospheric Waveform Shifting in Sidebar
         const path = document.getElementById('waveform-path');
         let points = [];
@@ -417,109 +341,168 @@
             lgsArmed = !lgsArmed;
             if(lgsArmed) {
                 lgsStatus.innerText = 'CHARGED';
-                lgsStatus.className = 'text-primary';
+                lgsStatus.className = 'text-primary adaptive-optics-status-text';
                 lgsBtn.classList.remove('bg-outline-variant', 'text-on-surface-variant');
                 lgsBtn.classList.add('border-primary', 'text-primary');
             } else {
                 lgsStatus.innerText = 'DISARMED';
-                lgsStatus.className = 'text-on-surface-variant';
+                lgsStatus.className = 'text-on-surface-variant adaptive-optics-status-text';
                 lgsBtn.classList.remove('border-primary', 'text-primary');
                 lgsBtn.classList.add('bg-outline-variant', 'text-on-surface-variant');
             }
         });
+    </script>
 
-        // 3. MATH-DRIVEN CANVAS POLLUTION SWEEPER GAME
-        const canvas = document.getElementById('atmosphereCanvas');
-        if (canvas) {
+    <!-- Main Gameplay Handshake and Interactive Pollution Sweeper Canvas -->
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            // 1. SAFE PAYLOAD VALIDATION HANDSHAKE
+            const payloadData = localStorage.getItem('active_mission_payload');
+            if (!payloadData) {
+                window.location.href = '../index.html';
+                return;
+            }
+
+            const activeMission = JSON.parse(payloadData);
+            if (activeMission.stationId !== 'mauna_kea') {
+                window.location.href = '../index.html';
+                return;
+            }
+
+            // Update display contract headers
+            const contractRewards = document.querySelector('.active-contract-value');
+            if (contractRewards) {
+                contractRewards.innerText = `+${activeMission.totalCreditReward} CR // +${activeMission.totalIntelReward} SI`;
+            }
+
+            // Update sidebar mission metadata
+            const missionTitle = document.getElementById('sidebar-mission-title');
+            const missionDesc = document.getElementById('sidebar-mission-desc');
+            if (missionTitle) missionTitle.innerText = activeMission.objectiveText.toUpperCase();
+            if (missionDesc) missionDesc.innerText = `Target coordinates locked. Conduct manual cleaning parameters across all elevation profiles to clear orbital debris and air soot.`;
+
+            // 2. DYNAMIC CHECKLIST RENDERING FUNCTION
+            const renderObjectivesList = () => {
+                const checklistElement = document.getElementById('mauna-kea-checklist');
+                if (!checklistElement) return;
+
+                checklistElement.innerHTML = ''; // Reset container layout
+
+                activeMission.objectives.forEach(obj => {
+                    const li = document.createElement('li');
+                    li.style.margin = "10px 0";
+                    li.style.fontFamily = "monospace";
+                    li.style.fontSize = "12px";
+
+                    if (obj.isCompleted) {
+                        li.style.color = "#00ff66"; // Neon Success Green
+                        li.style.textDecoration = "line-through";
+                        li.innerText = `[X] ${obj.text}`;
+                    } else {
+                        li.style.color = "#00f3ff"; // Neon Operations Cyan
+                        li.innerText = `[ ] ${obj.text}`;
+                    }
+                    checklistElement.appendChild(li);
+                });
+            };
+
+            // 3. ATMOSPHERIC PURITY MATH CALCULATION
+            const updateAtmosphericPurityBar = () => {
+                const total = activeMission.objectives.length;
+                const completed = activeMission.objectives.filter(o => o.isCompleted).length;
+                const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+                // Sync text element in the Sweeper Controller Header
+                const purityReadout = document.querySelector('.purity-percentage-readout');
+                if (purityReadout) {
+                    purityReadout.innerText = `${percentage}%`;
+                }
+
+                // Sync the visual telemetry progress bar width
+                const purityBar = document.getElementById('purity-telemetry-bar');
+                if (purityBar) {
+                    purityBar.style.width = `${percentage}%`;
+                }
+
+                // Handle total system clearance closure
+                if (percentage === 100) {
+                    const actionStatusText = document.querySelector('.adaptive-optics-status-text');
+                    if (actionStatusText) {
+                        actionStatusText.innerHTML = `<button id="btn-complete-mission" class="neon-btn-success" style="width:100%; padding:10px; background:#00ff66; color:#000; border:none; font-family:monospace; font-weight:bold; cursor:pointer;">[ DEPLOY ORBITAL DATA UPLINK ]</button>`;
+                        
+                        document.getElementById('btn-complete-mission').addEventListener('click', () => {
+                            if (window.GameState) {
+                                GameState.completeActiveMission();
+                            } else {
+                                window.location.href = '../index.html';
+                            }
+                        });
+                    }
+                }
+            };
+
+            // Initial boot visualization synchronization
+            renderObjectivesList();
+            updateAtmosphericPurityBar();
+
+            // 4. CANVAS SETUP & CONFIGURATION
+            const canvas = document.getElementById('sweeperCanvas');
             const ctx = canvas.getContext('2d');
-            let mouseX = canvas.width / 2;
-            let mouseY = canvas.height / 2;
-            let mouseInCanvas = false;
-            let isSweeping = false;
+
             let particles = [];
             let sparks = [];
-            const maxParticles = 25;
+            let laserLine = null;
+            let laserTimer = 0;
 
-            // Generate starry sky coords for LEO background
+            // Helper to dynamically match particle height properties to checklist layer IDs
+            const getLayerTypeByHeight = (yValue) => {
+                if (yValue < 130) return 'mk_leo';
+                if (yValue >= 130 && yValue < 260) return 'mk_stratosphere';
+                return 'mk_troposphere';
+            };
+
+            // Generate balanced random target clusters
+            for (let i = 0; i < 25; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    radius: Math.random() * 6 + 4,
+                    speed: Math.random() * 0.4 + 0.1,
+                    direction: Math.random() > 0.5 ? 1 : -1
+                });
+            }
+
+            // Generate starry sky coordinates for LEO background
             let stars = [];
             for (let i = 0; i < 40; i++) {
                 stars.push({
                     x: Math.random() * canvas.width,
-                    y: Math.random() * 133,
+                    y: Math.random() * 130,
                     alpha: 0.2 + Math.random() * 0.8,
                     blinkSpeed: 0.01 + Math.random() * 0.02
                 });
             }
 
-            // Spawn dynamic air pollution particle
-            function createParticle() {
-                return {
-                    x: Math.random() * canvas.width,
-                    y: Math.random() * canvas.height,
-                    vx: (Math.random() - 0.5) * 1.8,
-                    vy: (Math.random() - 0.5) * 0.8,
-                    size: 5 + Math.random() * 5,
-                    color: Math.random() > 0.45 ? '#ffb866' : '#ffb4ab', // Amber ozone haze vs red aerosol soot
-                    hp: 100,
-                    isDying: false
-                };
-            }
-
-            // Init primary particle list
-            for (let i = 0; i < maxParticles; i++) {
-                particles.push(createParticle());
-            }
-
-            // Track cursor coords inside canvas element
+            // Target tracking coordinates
+            let mouseX = canvas.width / 2;
+            let mouseY = canvas.height / 2;
             canvas.addEventListener('mousemove', (e) => {
                 const rect = canvas.getBoundingClientRect();
                 mouseX = (e.clientX - rect.left) * (canvas.width / rect.width);
                 mouseY = (e.clientY - rect.top) * (canvas.height / rect.height);
-                mouseInCanvas = true;
-                if (lgsArmed) {
-                    isSweeping = true;
-                    lgsStatus.innerText = 'FIRING';
-                    lgsStatus.className = 'text-tertiary animate-pulse';
-                }
             });
 
-            canvas.addEventListener('mouseleave', () => {
-                mouseInCanvas = false;
-                isSweeping = false;
-                if (lgsArmed) {
-                    lgsStatus.innerText = 'CHARGED';
-                    lgsStatus.className = 'text-primary';
-                }
-            });
-
-            // Handle touch dragging
-            canvas.addEventListener('touchmove', (e) => {
-                if (e.touches.length > 0) {
-                    const rect = canvas.getBoundingClientRect();
-                    mouseX = (e.touches[0].clientX - rect.left) * (canvas.width / rect.width);
-                    mouseY = (e.touches[0].clientY - rect.top) * (canvas.height / rect.height);
-                    mouseInCanvas = true;
-                    if (lgsArmed) {
-                        isSweeping = true;
-                        lgsStatus.innerText = 'FIRING';
-                    }
-                }
-            });
-
-            function renderSweeper() {
-                if (!activePayload) {
-                    requestAnimationFrame(renderSweeper);
-                    return;
-                }
+            // 5. THE CORE ENGINE ANIMATION LOOP
+            function animate() {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-                // --- DRAW ALTITUDE SECTORS WITH GRADIATES ---
+                // --- DRAW ALTITUDE SECTORS WITH GRADIATES (Premium Visuals) ---
                 // A. LEO Orbit (Top Third: Cosmic Blue Gradient)
-                const gradLeo = ctx.createLinearGradient(0, 0, 0, 133);
+                const gradLeo = ctx.createLinearGradient(0, 0, 0, 130);
                 gradLeo.addColorStop(0, '#060812');
                 gradLeo.addColorStop(1, '#0e111d');
                 ctx.fillStyle = gradLeo;
-                ctx.fillRect(0, 0, canvas.width, 133);
+                ctx.fillRect(0, 0, canvas.width, 130);
 
                 // Draw starry field
                 stars.forEach(s => {
@@ -532,138 +515,97 @@
                 });
 
                 // B. Stratosphere (Middle Third: Deep Hazy Indigo Gradient)
-                const gradStrato = ctx.createLinearGradient(0, 133, 0, 266);
+                const gradStrato = ctx.createLinearGradient(0, 130, 0, 260);
                 gradStrato.addColorStop(0, '#0e111d');
                 gradStrato.addColorStop(1, '#171424');
                 ctx.fillStyle = gradStrato;
-                ctx.fillRect(0, 133, canvas.width, 133);
+                ctx.fillRect(0, 130, canvas.width, 130);
 
                 // C. Troposphere (Bottom Third: Dust Haze Teal Gradient)
-                const gradTropo = ctx.createLinearGradient(0, 266, 0, 400);
+                const gradTropo = ctx.createLinearGradient(0, 260, 0, canvas.height);
                 gradTropo.addColorStop(0, '#171424');
                 gradTropo.addColorStop(1, '#131b26');
                 ctx.fillStyle = gradTropo;
-                ctx.fillRect(0, 266, canvas.width, 134);
+                ctx.fillRect(0, 260, canvas.width, canvas.height - 260);
 
-                // --- DRAW SECTOR GRID LABELS & SEPARATORS ---
-                ctx.save();
-                ctx.strokeStyle = 'rgba(111, 238, 225, 0.12)';
+                // Render Background Boundaries & Visual Guides
+                ctx.strokeStyle = 'rgba(0, 243, 255, 0.08)';
                 ctx.lineWidth = 1;
-                ctx.setLineDash([6, 6]);
+                
+                // Troposphere Marker
+                ctx.beginPath(); ctx.moveTo(0, 260); ctx.lineTo(canvas.width, 260); ctx.stroke();
+                ctx.fillStyle = 'rgba(255,255,255,0.2)';
+                ctx.font = '9px monospace';
+                ctx.fillText("TROPOSPHERIC PARTICULATE HAZE (ALTITUDE: 0km - 12km)", 10, 380);
 
-                // Strato/Leo dividing line
-                ctx.beginPath();
-                ctx.moveTo(0, 133);
-                ctx.lineTo(canvas.width, 133);
-                ctx.stroke();
+                // Stratosphere Marker
+                ctx.beginPath(); ctx.moveTo(0, 130); ctx.lineTo(canvas.width, 130); ctx.stroke();
+                ctx.fillText("STRATOSPHERIC AEROSOL ZONE (ALTITUDE: 12km - 80km)", 10, 240);
+                ctx.fillText("LEO SPACE DEBRIS GRID (ALTITUDE: 80km - 320km)", 10, 110);
 
-                // Tropo/Strato dividing line
-                ctx.beginPath();
-                ctx.moveTo(0, 266);
-                ctx.lineTo(canvas.width, 266);
-                ctx.stroke();
+                // Render & Update Aerosol Particles
+                for (let i = 0; i < particles.length; i++) {
+                    let p = particles[i];
+                    p.x += p.speed * p.direction;
+                    if (p.x < 0 || p.x > canvas.width) p.direction *= -1;
 
-                // Draw sector headings
-                ctx.restore();
-                ctx.save();
-                ctx.font = '700 8px "JetBrains Mono"';
+                    // Soft atmospheric color glows
+                    if (p.y < 130) ctx.fillStyle = 'rgba(255, 179, 186, 0.85)';
+                    else if (p.y >= 130 && p.y < 260) ctx.fillStyle = 'rgba(255, 223, 186, 0.85)';
+                    else ctx.fillStyle = 'rgba(255, 255, 186, 0.85)';
 
-                ctx.fillStyle = 'rgba(255, 184, 102, 0.4)';
-                ctx.fillText("LEO SPACE DEBRIS GRID (ALTITUDE: 80km - 320km)", 15, 22);
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                    ctx.fill();
 
-                ctx.fillStyle = 'rgba(111, 238, 225, 0.4)';
-                ctx.fillText("STRATOSPHERIC AEROSOL ZONE (ALTITUDE: 12km - 80km)", 15, 155);
+                    // 6. COLLISION RESOLUTION HANDSHAKE
+                    if (laserLine && laserTimer > 0) {
+                        let distance = Math.abs((laserLine.targetY - canvas.height) * p.x - (laserLine.targetX - (canvas.width/2)) * p.y + (laserLine.targetX * canvas.height) - (laserLine.targetY * (canvas.width/2))) / Math.sqrt(Math.pow(laserLine.targetY - canvas.height, 2) + Math.pow(laserLine.targetX - (canvas.width/2), 2));
+                        
+                        if (distance < p.radius + 6 && p.y <= Math.max(laserLine.targetY, p.y)) {
+                            const layerTargetId = getLayerTypeByHeight(p.y);
+                            
+                            // Cross off objective in local and systemic memory arrays
+                            const activeObj = activeMission.objectives.find(o => o.id === layerTargetId);
+                            if (activeObj && !activeObj.isCompleted) {
+                                activeObj.isCompleted = true;
+                                localStorage.setItem('active_mission_payload', JSON.stringify(activeMission));
+                                
+                                // Fire incremental reward deposit
+                                if (window.GameState) {
+                                    GameState.claimMilestone(layerTargetId);
+                                }
+                                
+                                // Re-render UI readouts instantly
+                                renderObjectivesList();
+                                updateAtmosphericPurityBar();
+                            }
 
-                ctx.fillStyle = 'rgba(126, 240, 167, 0.4)';
-                ctx.fillText("TROPOSPHERIC PARTICULATE HAZE (ALTITUDE: 0km - 12km)", 15, 288);
-                ctx.restore();
-
-                // --- UPDATE & DRAW FLOATING POLLUTION PARTICLES ---
-                particles.forEach(p => {
-                    if (!p.isDying) {
-                        p.x += p.vx;
-                        p.y += p.vy;
-
-                        // Wrap-around horizontal bounds
-                        if (p.x < -10) p.x = canvas.width + 5;
-                        if (p.x > canvas.width + 10) p.x = -5;
-
-                        // Bounce vertical sector bounds to preserve local atmospheric concentration
-                        if (p.y < 5 || p.y > canvas.height - 5) p.vy = -p.vy;
-                    }
-
-                    // Check laser-sweeper range intersection
-                    if (isSweeping && mouseInCanvas && !p.isDying && !gameFinished) {
-                        const dx = p.x - mouseX;
-                        const dy = p.y - mouseY;
-                        const dist = Math.sqrt(dx * dx + dy * dy);
-
-                        if (dist < 26) {
-                            // Target sweep matches! Tick down particle health and size
-                            p.hp -= 3.8;
-                            p.size -= 0.16;
-
-                            // Emit glowing feedback micro-sparks
-                            if (Math.random() > 0.4) {
+                            // Generate glowing feedback micro-sparks (Premium Visuals)
+                            for (let j = 0; j < 8; j++) {
                                 sparks.push({
                                     x: p.x,
                                     y: p.y,
-                                    vx: (Math.random() - 0.5) * 3,
-                                    vy: (Math.random() - 0.5) * 3,
+                                    vx: (Math.random() - 0.5) * 4,
+                                    vy: (Math.random() - 0.5) * 4,
                                     size: 1.5 + Math.random() * 2,
-                                    color: p.color,
+                                    color: p.y < 130 ? '#ffb3ba' : (p.y >= 130 && p.y < 260 ? '#ffdfba' : '#ffffba'),
                                     alpha: 1
                                 });
                             }
-                             if (p.hp <= 0 || p.size <= 1.2) {
-                                 p.isDying = true;
-                                 
-                                 // Determine layer based on y-coordinate
-                                 let layerId = '';
-                                 if (p.y < 133) {
-                                     layerId = 'mk_leo';
-                                 } else if (p.y < 266) {
-                                     layerId = 'mk_stratosphere';
-                                 } else {
-                                     layerId = 'mk_troposphere';
-                                 }
-
-                                 if (window.GameState) {
-                                     window.GameState.claimMilestone(layerId);
-                                 }
-                                 // Immediately following the milestone claim, re-invoke renderMaunaKeaObjectives()
-                                 renderMaunaKeaObjectives();
-                             }
+                            
+                            particles.splice(i, 1);
+                            i--;
                         }
                     }
+                }
 
-                    // Draw the particle
-                    if (!p.isDying) {
-                        ctx.save();
-                        ctx.shadowColor = p.color;
-                        ctx.shadowBlur = p.hp < 60 ? 3 : 7;
-                        ctx.fillStyle = p.color;
-                        ctx.globalAlpha = 0.55 + (p.hp / 200);
-
-                        ctx.beginPath();
-                        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-                        ctx.fill();
-                        ctx.restore();
-                    } else {
-                        // Quick filter replacement
-                        const pIdx = particles.indexOf(p);
-                        if (pIdx !== -1) {
-                            particles[pIdx] = createParticle();
-                        }
-                    }
-                });
-
-                // --- RENDER GLOWING MICROS-SPARKS TRAILS ---
-                sparks.forEach(s => {
+                // Render & update sparks (Premium Visuals)
+                sparks.forEach((s, idx) => {
                     s.x += s.vx;
                     s.y += s.vy;
-                    s.alpha -= 0.035;
-                    s.size -= 0.04;
+                    s.alpha -= 0.04;
+                    s.size -= 0.05;
 
                     if (s.alpha > 0 && s.size > 0.1) {
                         ctx.save();
@@ -674,12 +616,11 @@
                         ctx.fill();
                         ctx.restore();
                     } else {
-                        const sIdx = sparks.indexOf(s);
-                        if (sIdx !== -1) sparks.splice(sIdx, 1);
+                        sparks.splice(idx, 1);
                     }
                 });
 
-                // --- DRAW TURRET BASE DOME & LASER FOCUS BEAM ---
+                // --- DRAW TURRET BASE DOME & SNAPPED ROTATION LENS SNOUT (Premium Visuals) ---
                 const tx = canvas.width / 2;
                 const ty = canvas.height;
 
@@ -693,8 +634,8 @@
                 ctx.fill();
                 ctx.stroke();
 
-                // Draw lens snout line rotated towards mouse coordinate
-                const turretAngle = Math.atan2(mouseY - ty, mouseX - tx);
+                // Draw lens snout line rotated towards pointer/target coords
+                const turretAngle = Math.atan2((laserLine ? laserLine.targetY : mouseY) - ty, (laserLine ? laserLine.targetX : mouseX) - tx);
                 const rx = tx + Math.cos(turretAngle) * 36;
                 const ry = ty + Math.sin(turretAngle) * 36;
                 
@@ -705,89 +646,66 @@
                 ctx.stroke();
                 ctx.restore();
 
-                // Firing laser logic
-                if (isSweeping && mouseInCanvas && !gameFinished) {
+                // Render Active Adaptive Optics Pulse
+                if (laserLine && laserTimer > 0) {
                     ctx.save();
-                    
+
                     // Outward wide green aura beam
-                    ctx.strokeStyle = '#22c55e';
-                    ctx.lineWidth = 3.5;
-                    ctx.globalAlpha = 0.35 + Math.random() * 0.15;
-                    ctx.shadowColor = '#22c55e';
-                    ctx.shadowBlur = 12;
+                    ctx.strokeStyle = '#00ff66';
+                    ctx.lineWidth = 4.5;
+                    ctx.shadowBlur = 15;
+                    ctx.shadowColor = '#00ff66';
                     ctx.beginPath();
                     ctx.moveTo(rx, ry);
-                    ctx.lineTo(mouseX, mouseY);
+                    ctx.lineTo(laserLine.targetX, laserLine.targetY);
                     ctx.stroke();
+                    ctx.shadowBlur = 0; // Clear blur layer
 
                     // Sharp inner concentrated white core beam
                     ctx.strokeStyle = '#ffffff';
-                    ctx.lineWidth = 1;
-                    ctx.globalAlpha = 0.9;
+                    ctx.lineWidth = 1.5;
                     ctx.beginPath();
                     ctx.moveTo(rx, ry);
-                    ctx.lineTo(mouseX, mouseY);
+                    ctx.lineTo(laserLine.targetX, laserLine.targetY);
                     ctx.stroke();
 
                     ctx.restore();
-
-                    // Draw Target Reticle/Crosshair
-                    ctx.save();
-                    ctx.strokeStyle = '#22c55e';
-                    ctx.lineWidth = 1.2;
-                    ctx.setLineDash([3, 3]);
-
-                    ctx.beginPath();
-                    ctx.arc(mouseX, mouseY, 20, 0, 2 * Math.PI);
-                    ctx.stroke();
-
-                    // Brackets
-                    ctx.restore();
-                    ctx.save();
-                    ctx.strokeStyle = '#22c55e';
-                    ctx.lineWidth = 1.5;
-                    
-                    // Cross lines
-                    ctx.beginPath();
-                    ctx.moveTo(mouseX - 6, mouseY); ctx.lineTo(mouseX + 6, mouseY);
-                    ctx.moveTo(mouseX, mouseY - 6); ctx.lineTo(mouseX, mouseY + 6);
-                    ctx.stroke();
-                    ctx.restore();
+                    laserTimer--;
                 }
 
-                // Recursively loop frame animations at stable rate
-                requestAnimationFrame(renderSweeper);
+                requestAnimationFrame(animate);
             }
 
-            // Launch active sweeping frame loops
-            renderSweeper();
-        }
+            // 7. FIRE COMMAND INTERCEPT
+            canvas.addEventListener('click', (e) => {
+                if (typeof lgsArmed !== 'undefined' && !lgsArmed) return; // Guard by armed status
+                const rect = canvas.getBoundingClientRect();
+                const clickX = e.clientX - rect.left;
+                const clickY = e.clientY - rect.top;
 
-        // Trigger victory overlay display on hitting 100% purity
-        function triggerPurityMetricsUnlock() {
-            const overlay = document.getElementById('purity-complete-overlay');
-            if (overlay) {
-                overlay.classList.remove('hidden');
-                lgsStatus.innerText = 'NOMINAL';
-                lgsStatus.className = 'text-tertiary';
-            }
-        }
+                laserLine = { targetX: clickX, targetY: clickY };
+                laserTimer = 12; // Pulse life length
 
-        // Complete the contract, claim cash, and redirect safely back to ground control hub
-        function transmitPurityMetrics() {
-            if (window.GameState) {
-                const completeSuccess = window.GameState.completeActiveMission();
-                if (completeSuccess) {
-                    // Safe redirection pipeline
-                    window.location.href = '../index.html';
-                } else {
-                    console.error("Failed to complete and claim staged contract rewards.");
-                    window.location.href = '../index.html';
+                // Set firing state feedback in AO status panel
+                const total = activeMission.objectives.length;
+                const completed = activeMission.objectives.filter(o => o.isCompleted).length;
+                if (completed < total) {
+                    const actionStatusText = document.querySelector('.adaptive-optics-status-text');
+                    if (actionStatusText) {
+                        actionStatusText.innerText = 'FIRING';
+                        actionStatusText.className = 'text-tertiary animate-pulse adaptive-optics-status-text';
+                        setTimeout(() => {
+                            if (actionStatusText && (typeof lgsArmed === 'undefined' || lgsArmed) && activeMission.objectives.filter(o => o.isCompleted).length < activeMission.objectives.length) {
+                                actionStatusText.innerText = 'CHARGED';
+                                actionStatusText.className = 'text-primary adaptive-optics-status-text';
+                            }
+                        }, 400);
+                    }
                 }
-            } else {
-                window.location.href = '../index.html';
-            }
-        }
+            });
+
+            animate();
+        });
     </script>
 </body>
 </html>
