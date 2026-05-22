@@ -308,12 +308,6 @@
         let activePayload = null;
         let gameFinished = false;
         
-        let layerStats = {
-            mk_troposphere: { destroyed: 0, target: 6, completed: false },
-            mk_stratosphere: { destroyed: 0, target: 6, completed: false },
-            mk_leo: { destroyed: 0, target: 6, completed: false }
-        };
-
         function verifyAndLoadState() {
             let activeMission = null;
             try {
@@ -329,16 +323,6 @@
 
             activePayload = activeMission;
 
-            // Sync with current completed state from LocalStorage active payload
-            activePayload.objectives.forEach(obj => {
-                if (layerStats[obj.id]) {
-                    layerStats[obj.id].completed = obj.isCompleted;
-                    if (obj.isCompleted) {
-                        layerStats[obj.id].destroyed = layerStats[obj.id].target;
-                    }
-                }
-            });
-
             // Populate Sidebar Active Mission telemetry card
             const creditVal = activeMission.totalCreditReward || 0;
             const intelVal = activeMission.totalIntelReward || 0;
@@ -347,7 +331,7 @@
             document.getElementById('sidebar-mission-rewards').innerText = `+${creditVal} CR // +${intelVal} SI`;
 
             renderChecklist();
-            updatePurityDisplays();
+            updateProgressBar();
         }
 
         function renderChecklist() {
@@ -356,11 +340,7 @@
 
             container.innerHTML = '';
             activePayload.objectives.forEach((obj, idx) => {
-                const stats = layerStats[obj.id];
-                if (!stats) return;
-
                 const isCompleted = obj.isCompleted;
-                const progressText = `[${stats.destroyed}/${stats.target}]`;
                 const zebraClass = idx % 2 === 0 ? 'bg-white/[0.02]' : 'bg-transparent';
                 
                 const row = document.createElement('div');
@@ -369,37 +349,31 @@
                 const textClass = isCompleted ? 'text-tertiary line-through font-headline' : 'text-on-surface font-headline';
                 const icon = isCompleted ? 'task_alt' : 'radio_button_unchecked';
                 const iconColor = isCompleted ? 'text-tertiary' : 'text-outline';
+                const statusText = isCompleted ? 'PURIFIED' : 'PENDING';
 
                 row.innerHTML = `
                     <div class="flex items-center gap-2">
                         <span class="material-symbols-outlined text-[15px] ${iconColor}">${icon}</span>
                         <span class="text-[11px] leading-none ${textClass}">${obj.text}</span>
                     </div>
-                    <span class="font-data text-[10px] ${isCompleted ? 'text-tertiary' : 'text-primary/70'}">${progressText}</span>
+                    <span class="font-data text-[10px] ${isCompleted ? 'text-tertiary' : 'text-primary/70'}">${statusText}</span>
                 `;
                 container.appendChild(row);
             });
         }
 
-        function calculateOverallPurity() {
-            if (!activePayload || !activePayload.objectives || activePayload.objectives.length === 0) return 0;
-            let totalProgress = 0;
-            activePayload.objectives.forEach(obj => {
-                const stats = layerStats[obj.id];
-                if (stats) {
-                    totalProgress += (stats.destroyed / stats.target) * 100;
-                }
-            });
-            return Math.min(100, Math.floor(totalProgress / activePayload.objectives.length));
-        }
+        function updateProgressBar() {
+            if (!activePayload || !activePayload.objectives || activePayload.objectives.length === 0) return;
+            const total = activePayload.objectives.length;
+            const completed = activePayload.objectives.filter(o => o.isCompleted).length;
+            const percentage = Math.floor((completed / total) * 100);
 
-        function updatePurityDisplays() {
-            const purity = calculateOverallPurity();
-            document.getElementById('purity-telemetry-text').innerText = `${purity}%`;
-            document.getElementById('purity-telemetry-bar').style.width = `${purity}%`;
+            const textEl = document.getElementById('purity-telemetry-text');
+            const barEl = document.getElementById('purity-telemetry-bar');
+            if (textEl) textEl.innerText = `${percentage}%`;
+            if (barEl) barEl.style.width = `${percentage}%`;
 
-            // If purity hits 100%, show the completion overlay
-            if (purity >= 100 && !gameFinished) {
+            if (percentage >= 100 && !gameFinished) {
                 gameFinished = true;
                 triggerPurityMetricsUnlock();
             }
@@ -659,22 +633,14 @@
                                 // Check if this layer is active and not yet completed
                                 const activeObj = activePayload.objectives.find(o => o.id === layerId);
                                 if (activeObj && !activeObj.isCompleted) {
-                                    const stats = layerStats[layerId];
-                                    if (stats && stats.destroyed < stats.target) {
-                                        stats.destroyed++;
-                                        
-                                        // If local destruction hits target (6), claim milestone!
-                                        if (stats.destroyed >= stats.target) {
-                                            stats.completed = true;
-                                            if (window.GameState) {
-                                                window.GameState.claimMilestone(layerId);
-                                                activeObj.isCompleted = true; // sync local
-                                            }
+                                    if (window.GameState) {
+                                        const success = window.GameState.claimMilestone(layerId);
+                                        if (success) {
+                                            // Re-read payload from LocalStorage to update our local reference
+                                            activePayload = JSON.parse(localStorage.getItem("active_mission_payload"));
+                                            renderChecklist();
+                                            updateProgressBar();
                                         }
-                                        
-                                        // Update the checklist UI & displays
-                                        renderChecklist();
-                                        updatePurityDisplays();
                                     }
                                 }
                             }
