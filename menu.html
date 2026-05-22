@@ -35,15 +35,16 @@
         }
 
         /* Video/Starfield background elements */
-        #bg-container {
+        .menu-viewport-container {
             position: fixed;
             top: 0;
             left: 0;
             width: 100vw;
             height: 100vh;
             overflow: hidden;
-            z-index: -2;
-            background-color: #03060c;
+            z-index: -4;
+            background-color: #00050a;
+            background: radial-gradient(circle at center, #000b14 0%, #00050a 100%);
         }
 
         #starfieldCanvas {
@@ -55,14 +56,15 @@
             z-index: -3;
         }
 
-        video#bg-video {
+        .cosmic-video-background {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
             object-fit: cover;
-            z-index: -1;
+            z-index: -2;
+            pointer-events: none;
             opacity: 0.65; /* Blends nicely with the starry canvas backdrop behind it */
         }
 
@@ -74,7 +76,7 @@
             height: 100%;
             background: rgba(0, 5, 10, 0.45);
             pointer-events: none;
-            z-index: 0;
+            z-index: -1;
         }
 
         /* Scanline Overlay simulating a high-precision CRT Terminal screen */
@@ -436,11 +438,11 @@
     <div class="scanlines"></div>
 
     <!-- BACKGROUND ENGINE -->
-    <div id="bg-container">
+    <div id="bg-container" class="menu-viewport-container">
         <!-- Twin performance stars layer -->
         <canvas id="starfieldCanvas"></canvas>
-        <video autoplay id="bg-video" loop muted playsinline>
-            <source src="assets/video/space-interstellar-loop.mp4" type="video/mp4"/>
+        <video autoplay muted loop playsinline preload="auto" id="bg-video" class="cosmic-video-background">
+            <source src="./assets/video/space-interstellar-loop.mp4" type="video/mp4"/>
         </video>
         <div class="dark-tint-overlay"></div>
     </div>
@@ -667,10 +669,53 @@
             profileIq.innerText = '--- IQ';
         }
 
+        // 1B. ROBUST BACKGROUND VIDEO AUTOPLAY HANDSHAKE
+        function initBackgroundVideo() {
+            const video = document.getElementById('bg-video');
+            if (!video) return;
+
+            // Enforce play trigger immediately
+            const playPromise = video.play();
+
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
+                    console.log("⚡ [VIDEO] Interstellar background loop started successfully.");
+                }).catch(error => {
+                    console.warn("⚠️ [VIDEO] Autoplay blocked by browser policy or power-saving mode. Arming interactive fallback:", error);
+                    
+                    // Fallback play routine triggered by first user interaction
+                    const runFallbackPlay = () => {
+                        video.play()
+                            .then(() => {
+                                console.log("⚡ [VIDEO] Background loop resumed successfully on user interaction.");
+                                cleanupFallback();
+                            })
+                            .catch(err => {
+                                console.error("❌ [VIDEO] User interaction resume failed:", err);
+                            });
+                    };
+
+                    const cleanupFallback = () => {
+                        window.removeEventListener('click', runFallbackPlay);
+                        window.removeEventListener('keydown', runFallbackPlay);
+                        window.removeEventListener('mousemove', runFallbackPlay);
+                        window.removeEventListener('touchstart', runFallbackPlay);
+                    };
+
+                    // Bind to major user interaction events
+                    window.addEventListener('click', runFallbackPlay, { once: true });
+                    window.addEventListener('keydown', runFallbackPlay, { once: true });
+                    window.addEventListener('mousemove', runFallbackPlay, { once: true });
+                    window.addEventListener('touchstart', runFallbackPlay, { once: true });
+                });
+            }
+        }
+
         // Run checking matrix immediately upon loading
         window.addEventListener('load', () => {
             checkSaveStateAndInitialize();
             initStarfield();
+            initBackgroundVideo();
         });
 
         // 2. VIEWPORT DRAWER TOGGLE OPERATIONS
