@@ -253,8 +253,10 @@
         <div id="tycoon-viewport" class="flex-grow relative bg-gradient-to-b from-[#05070f] via-[#020306] to-[#000000] border border-outline-variant overflow-hidden">
             <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(111,238,225,0.02)_0%,transparent_80%)] pointer-events-none"></div>
 
-            <!-- Interative Canvas -->
-            <canvas id="sweeperCanvas" width="550" height="400" class="cursor-crosshair bg-surface-container-lowest/80" style="width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 10; pointer-events: auto;"></canvas>
+            <!-- Interactive Canvas Responsive Wrapper -->
+            <div class="w-full h-full flex items-center justify-center p-2">
+                <canvas id="sweeperCanvas" class="cursor-crosshair bg-surface-container-lowest/80" style="z-index: 10; pointer-events: auto;"></canvas>
+            </div>
 
             <!-- Complete Transmit Overlay (Hidden initially) -->
             <div id="purity-complete-overlay" class="hidden absolute inset-0 bg-surface-container-lowest/90 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center select-none z-30">
@@ -407,17 +409,14 @@
 
                     const lgsStatus = document.getElementById("lgs-status");
                     if (lgsStatus) {
-                        const parent = lgsStatus.parentElement;
-                        if (parent) {
-                            parent.innerHTML = `<button id="btn-complete-mission" class="bg-emerald-500 text-slate-950 font-mono font-bold text-xs px-3 py-1 rounded border border-emerald-400 cursor-pointer">[ DEPLOY ORBITAL DATA UPLINK ]</button>`;
-                            
-                            // Click listener to complete mission and route back
-                            const btn = document.getElementById("btn-complete-mission");
-                            if (btn) {
-                                btn.addEventListener("click", () => {
-                                    transmitPurityMetrics();
-                                });
-                            }
+                        lgsStatus.outerHTML = `<button id="btn-complete-mission" class="bg-emerald-500 text-slate-950 font-mono font-bold text-xs px-3 py-1 rounded-sm border border-emerald-400 cursor-pointer">[ DEPLOY ORBITAL DATA UPLINK ]</button>`;
+                        
+                        // Click listener to complete mission and route back
+                        const btn = document.getElementById("btn-complete-mission");
+                        if (btn) {
+                            btn.addEventListener("click", () => {
+                                transmitPurityMetrics();
+                            });
                         }
                     }
                 }
@@ -480,10 +479,31 @@
             if (!canvas) return;
             const ctx = canvas.getContext('2d');
 
+            // Initialize canvas dimensions dynamically to fill the parent wrapper
+            if (canvas.parentElement && canvas.parentElement.clientWidth > 16 && canvas.parentElement.clientHeight > 16) {
+                canvas.width = canvas.parentElement.clientWidth - 16;
+                canvas.height = canvas.parentElement.clientHeight - 16;
+            } else {
+                canvas.width = 550;
+                canvas.height = 400;
+            }
+
             let particles = [];
             let sparks = [];
             let laserLine = null;
             let laserTimer = 0;
+
+            function createParticle() {
+                const w = canvas.width > 0 ? canvas.width : 550;
+                const h = canvas.height > 0 ? canvas.height : 400;
+                return {
+                    x: Math.random() * w,
+                    y: Math.random() * h,
+                    radius: Math.random() * 5 + 3,
+                    speed: Math.random() * 0.5 + 0.1,
+                    direction: Math.random() > 0.5 ? 1 : -1
+                };
+            }
 
             // Generate balanced random target clusters
             const maxParticles = 25;
@@ -491,26 +511,21 @@
                 particles.push(createParticle());
             }
 
-            function createParticle() {
-                return {
-                    x: Math.random() * canvas.width,
-                    y: Math.random() * canvas.height,
-                    radius: Math.random() * 5 + 3,
-                    speed: Math.random() * 0.5 + 0.1,
-                    direction: Math.random() > 0.5 ? 1 : -1
-                };
-            }
-
             // Generate starry sky coordinates for LEO background
             let stars = [];
-            for (let i = 0; i < 40; i++) {
-                stars.push({
-                    x: Math.random() * canvas.width,
-                    y: Math.random() * 140, // Top layer is y < 140
-                    alpha: 0.2 + Math.random() * 0.8,
-                    blinkSpeed: 0.01 + Math.random() * 0.02
-                });
+            function generateStars() {
+                stars = [];
+                const w = canvas.width > 0 ? canvas.width : 550;
+                for (let i = 0; i < 40; i++) {
+                    stars.push({
+                        x: Math.random() * w,
+                        y: Math.random() * 140, // Top layer is y < 140
+                        alpha: 0.2 + Math.random() * 0.8,
+                        blinkSpeed: 0.01 + Math.random() * 0.02
+                    });
+                }
             }
+            generateStars();
 
             // Canvas Mouse tracker (visual representation of lens direction)
             let mouseX = canvas.width / 2;
@@ -551,6 +566,24 @@
 
             // 7. ANIMATION LOOP
             function animate() {
+                // Incorporate Dynamic Resizing within Animation Tracking Loop
+                if (canvas.parentElement) {
+                    const targetWidth = canvas.parentElement.clientWidth - 16;
+                    const targetHeight = canvas.parentElement.clientHeight - 16;
+                    if (targetWidth > 0 && targetHeight > 0 && (canvas.width !== targetWidth || canvas.height !== targetHeight)) {
+                        canvas.width = targetWidth;
+                        canvas.height = targetHeight;
+                        generateStars();
+                        // Redistribute particles across the new size if they were stuck at 0
+                        if (particles.some(p => p.x === 0 && p.y === 0)) {
+                            particles = [];
+                            for (let i = 0; i < maxParticles; i++) {
+                                particles.push(createParticle());
+                            }
+                        }
+                    }
+                }
+
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
 
                 // --- DRAW ALTITUDE SECTORS WITH GRADIENTS ---
@@ -602,7 +635,7 @@
                 // Demarcation labels
                 ctx.fillStyle = 'rgba(0, 243, 255, 0.4)';
                 ctx.font = '9px "JetBrains Mono", monospace';
-                ctx.fillText("TROPOSPHERIC PARTICULATE HAZE (ALTITUDE < 130px)", 10, 385);
+                ctx.fillText("TROPOSPHERIC PARTICULATE HAZE (ALTITUDE < 130px)", 10, canvas.height - 15);
                 ctx.fillText("STRATOSPHERIC AEROSOL ZONE (ALTITUDE 130px - 260px)", 10, 255);
                 ctx.fillText("LEO SPACE DEBRIS GRID (ALTITUDE > 260px)", 10, 125);
 
@@ -656,11 +689,20 @@
 
                             const activeObj = activeMission.objectives.find(o => o.id === targetId || o.id === counterpartId);
                             if (activeObj && !activeObj.isCompleted) {
-                                activeObj.isCompleted = true;
-                                localStorage.setItem('active_mission_payload', JSON.stringify(activeMission));
-                                
                                 if (window.GameState) {
-                                    GameState.claimMilestone(activeObj.id);
+                                    const claimed = GameState.claimMilestone(activeObj.id);
+                                    if (claimed) {
+                                        const updatedPayload = localStorage.getItem('active_mission_payload');
+                                        if (updatedPayload) {
+                                            activeMission = JSON.parse(updatedPayload);
+                                        }
+                                    } else {
+                                        activeObj.isCompleted = true;
+                                        localStorage.setItem('active_mission_payload', JSON.stringify(activeMission));
+                                    }
+                                } else {
+                                    activeObj.isCompleted = true;
+                                    localStorage.setItem('active_mission_payload', JSON.stringify(activeMission));
                                 }
 
                                 renderMaunaKeaChecklist();

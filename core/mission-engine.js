@@ -249,6 +249,7 @@
 
         /**
          * Stages a mission to active_mission_payload in localStorage for the viewport to claim
+         * (acts as the generateMissionPayload routine where the active mission payload is saved)
          */
         stageMission(missionId) {
             const mission = activeMissions.find(m => m.id === missionId && m.status === 'active');
@@ -256,6 +257,9 @@
                 console.warn(`Mission ID ${missionId} not found or not active.`);
                 return null;
             }
+
+            // Explicitly purge any old active_mission_payload key in system memory before writing new parameters
+            localStorage.removeItem('active_mission_payload');
 
             const payload = {
                 missionId: mission.id,
@@ -268,10 +272,11 @@
                 scienceReward: mission.rewardScience,
                 safetyReward: mission.rewardSafety,
                 tier: mission.tier || 'standard',
+                // Explicitly map objective items to ensure their isCompleted attributes are strictly set to false upon object construction
                 objectives: (mission.objectives || []).map((obj, idx) => ({
                     id: obj.id || `obj-${idx}-${Date.now()}`,
                     text: obj.text || `Objective ${idx + 1}`,
-                    isCompleted: typeof obj.isCompleted === 'boolean' ? obj.isCompleted : false,
+                    isCompleted: false,
                     payoutShare: typeof obj.payoutShare === 'number' ? obj.payoutShare : 0.50
                 }))
             };
