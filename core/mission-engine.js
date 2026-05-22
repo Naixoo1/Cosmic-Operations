@@ -188,14 +188,14 @@
             if (site === 'mauna_kea') {
                 if (tier === 'critical') {
                     objectives.push(
-                        { id: 'mk_troposphere', text: 'Purify Troposphere Layer', isCompleted: false, payoutShare: 0.33 },
-                        { id: 'mk_stratosphere', text: 'Purify Stratosphere Layer', isCompleted: false, payoutShare: 0.33 },
-                        { id: 'mk_leo', text: 'Purify LEO Layer', isCompleted: false, payoutShare: 0.34 }
+                        { id: 'obj_troposphere', text: 'Purify Troposphere Layer', isCompleted: false, payoutShare: 0.33 },
+                        { id: 'obj_stratosphere', text: 'Purify Stratosphere Layer', isCompleted: false, payoutShare: 0.33 },
+                        { id: 'obj_leo', text: 'Purify LEO Layer', isCompleted: false, payoutShare: 0.34 }
                     );
                 } else {
                     objectives.push(
-                        { id: 'mk_troposphere', text: 'Purify Troposphere Layer', isCompleted: false, payoutShare: 0.50 },
-                        { id: 'mk_stratosphere', text: 'Purify Stratosphere Layer', isCompleted: false, payoutShare: 0.50 }
+                        { id: 'obj_troposphere', text: 'Purify Troposphere Layer', isCompleted: false, payoutShare: 0.50 },
+                        { id: 'obj_stratosphere', text: 'Purify Stratosphere Layer', isCompleted: false, payoutShare: 0.50 }
                     );
                 }
             } else if (site === 'atacama') {
