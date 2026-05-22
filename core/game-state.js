@@ -165,6 +165,74 @@
 
         // --- Staged Transaction Pattern Hooks ---
         /**
+         * Claims incremental mid-game rewards for a specific completed objective milestone
+         */
+        claimMilestone(objectiveId) {
+            try {
+                const payloadKey = 'active_mission_payload';
+                const serialized = localStorage.getItem(payloadKey);
+                if (!serialized) {
+                    console.warn("No active mission payload staged in storage for milestone claim.");
+                    return false;
+                }
+
+                const payload = JSON.parse(serialized);
+                if (!payload.objectives || !Array.isArray(payload.objectives)) {
+                    console.warn("Active mission payload has no valid objectives array.");
+                    return false;
+                }
+
+                const obj = payload.objectives.find(o => o.id === objectiveId);
+                if (!obj) {
+                    console.warn(`Objective ID ${objectiveId} not found in active mission payload.`);
+                    return false;
+                }
+
+                if (obj.isCompleted) {
+                    console.warn(`Objective ID ${objectiveId} is already completed.`);
+                    return false;
+                }
+
+                // Mark objective as completed
+                obj.isCompleted = true;
+
+                // Save updated payload back to LocalStorage
+                localStorage.setItem(payloadKey, JSON.stringify(payload));
+
+                // Calculate payouts based on payoutShare
+                const share = obj.payoutShare || 0;
+                const creditPayout = Math.floor((payload.creditReward || 0) * share);
+                const intelPayout = Math.floor((payload.intelReward || 0) * share);
+
+                // Instantly update master wallet balances and save
+                if (creditPayout > 0) {
+                    currentState.credits += creditPayout;
+                }
+                if (intelPayout > 0) {
+                    currentState.scienceIntelligence += intelPayout;
+                }
+                this.save();
+
+                // Broadcast a visual telemetry update
+                const milestoneEvent = new CustomEvent('cosmic-ops-milestone-claimed', {
+                    detail: {
+                        objectiveId: objectiveId,
+                        objectiveText: obj.text,
+                        creditPayout: creditPayout,
+                        intelPayout: intelPayout,
+                        payload: payload
+                    }
+                });
+                window.dispatchEvent(milestoneEvent);
+
+                return true;
+            } catch (err) {
+                console.error("Failed to claim milestone:", err);
+                return false;
+            }
+        },
+
+        /**
          * Validates and completes the active staged mission, transferring credits and science,
          * then clears the active payload to enforce complete-to-earn integrity.
          */
@@ -179,13 +247,16 @@
 
                 const payload = JSON.parse(serialized);
                 
-                // 1. Distribute rewards safely
-                if (payload.creditReward && payload.creditReward > 0) {
-                    this.addCredits(payload.creditReward);
+                // Enforce that all objectives are completed
+                if (payload.objectives && Array.isArray(payload.objectives)) {
+                    const allDone = payload.objectives.every(o => o.isCompleted);
+                    if (!allDone) {
+                        console.warn("Cannot complete active mission: some objectives are still outstanding.");
+                        return false;
+                    }
                 }
-                if (payload.intelReward && payload.intelReward > 0) {
-                    this.addScience(payload.intelReward);
-                }
+
+                // 1. Distribute safety rating rewards (since currency is awarded incrementally on milestones)
                 if (payload.safetyReward && payload.safetyReward > 0) {
                     this.adjustSafetyRating(payload.safetyReward);
                 }

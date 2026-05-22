@@ -173,6 +173,7 @@
                 <div class="space-y-2">
                     <h3 id="sidebar-mission-title" class="font-bold text-[12.5px] text-on-surface leading-tight">Loading staged mission...</h3>
                     <p id="sidebar-mission-desc" class="text-[11px] text-on-surface-variant leading-relaxed">Verifying secure communications channel...</p>
+                    <div id="objectives-checklist" class="mt-3 pt-3 border-t border-outline-variant/30 space-y-1"></div>
                     <div class="flex justify-between items-center pt-2 border-t border-outline-variant/30 font-data text-[10px]">
                         <span class="opacity-70">CONTRACT VALUE:</span>
                         <span id="sidebar-mission-rewards" class="text-tertiary font-bold">--- CR // --- SI</span>
@@ -305,6 +306,13 @@
     <script>
         // 1. STATE & SECURITY CHECK (Staged Transaction Pattern Safeguards)
         let activePayload = null;
+        let gameFinished = false;
+        
+        let layerStats = {
+            mk_troposphere: { destroyed: 0, target: 6, completed: false },
+            mk_stratosphere: { destroyed: 0, target: 6, completed: false },
+            mk_leo: { destroyed: 0, target: 6, completed: false }
+        };
 
         function verifyAndLoadState() {
             const serialized = localStorage.getItem('active_mission_payload');
@@ -315,7 +323,7 @@
             }
             try {
                 activePayload = JSON.parse(serialized);
-                if (!activePayload || !activePayload.missionId) {
+                if (!activePayload || !activePayload.missionId || !activePayload.objectives || !Array.isArray(activePayload.objectives) || activePayload.objectives.length === 0) {
                     window.location.href = '../index.html';
                     return;
                 }
@@ -325,10 +333,78 @@
                 return;
             }
 
+            // Sync with current completed state from LocalStorage active payload
+            activePayload.objectives.forEach(obj => {
+                if (layerStats[obj.id]) {
+                    layerStats[obj.id].completed = obj.isCompleted;
+                    if (obj.isCompleted) {
+                        layerStats[obj.id].destroyed = layerStats[obj.id].target;
+                    }
+                }
+            });
+
             // Populate Sidebar Active Mission telemetry card
             document.getElementById('sidebar-mission-title').innerText = activePayload.objectiveText.toUpperCase();
             document.getElementById('sidebar-mission-desc').innerText = `Target coordinates locked. Conduct manual cleaning parameters across all elevation profiles to clear orbital debris and air soot.`;
             document.getElementById('sidebar-mission-rewards').innerText = `+${activePayload.creditReward} CR // +${activePayload.intelReward} SI`;
+
+            renderChecklist();
+            updatePurityDisplays();
+        }
+
+        function renderChecklist() {
+            const container = document.getElementById('objectives-checklist');
+            if (!container) return;
+
+            container.innerHTML = '';
+            activePayload.objectives.forEach((obj, idx) => {
+                const stats = layerStats[obj.id];
+                if (!stats) return;
+
+                const isCompleted = obj.isCompleted;
+                const progressText = `[${stats.destroyed}/${stats.target}]`;
+                const zebraClass = idx % 2 === 0 ? 'bg-white/[0.02]' : 'bg-transparent';
+                
+                const row = document.createElement('div');
+                row.className = `flex items-center justify-between p-2 rounded-sm border border-outline-variant/10 ${zebraClass} transition-all`;
+                
+                const textClass = isCompleted ? 'text-tertiary line-through font-headline' : 'text-on-surface font-headline';
+                const icon = isCompleted ? 'task_alt' : 'radio_button_unchecked';
+                const iconColor = isCompleted ? 'text-tertiary' : 'text-outline';
+
+                row.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-[15px] ${iconColor}">${icon}</span>
+                        <span class="text-[11px] leading-none ${textClass}">${obj.text}</span>
+                    </div>
+                    <span class="font-data text-[10px] ${isCompleted ? 'text-tertiary' : 'text-primary/70'}">${progressText}</span>
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        function calculateOverallPurity() {
+            if (!activePayload || !activePayload.objectives || activePayload.objectives.length === 0) return 0;
+            let totalProgress = 0;
+            activePayload.objectives.forEach(obj => {
+                const stats = layerStats[obj.id];
+                if (stats) {
+                    totalProgress += (stats.destroyed / stats.target) * 100;
+                }
+            });
+            return Math.min(100, Math.floor(totalProgress / activePayload.objectives.length));
+        }
+
+        function updatePurityDisplays() {
+            const purity = calculateOverallPurity();
+            document.getElementById('purity-telemetry-text').innerText = `${purity}%`;
+            document.getElementById('purity-telemetry-bar').style.width = `${purity}%`;
+
+            // If purity hits 100%, show the completion overlay
+            if (purity >= 100 && !gameFinished) {
+                gameFinished = true;
+                triggerPurityMetricsUnlock();
+            }
         }
 
         // Run state safeguard checks immediately upon parsing
@@ -389,13 +465,9 @@
             let mouseY = canvas.height / 2;
             let mouseInCanvas = false;
             let isSweeping = false;
-            let purity = 0;
             let particles = [];
             let sparks = [];
             const maxParticles = 25;
-            const targetDestroysNeeded = 18; // Destroy 18 soot coordinates to hit 100% purity
-            let sootDestroyed = 0;
-            let gameFinished = false;
 
             // Generate starry sky coords for LEO background
             let stars = [];
@@ -571,16 +643,37 @@
 
                             if (p.hp <= 0 || p.size <= 1.2) {
                                 p.isDying = true;
-                                sootDestroyed++;
-                                purity = Math.min(100, Math.floor((sootDestroyed / targetDestroysNeeded) * 100));
+                                
+                                // Determine layer based on y-coordinate
+                                let layerId = '';
+                                if (p.y < 133) {
+                                    layerId = 'mk_leo';
+                                } else if (p.y < 266) {
+                                    layerId = 'mk_stratosphere';
+                                } else {
+                                    layerId = 'mk_troposphere';
+                                }
 
-                                // Sync purity telemetry immediately
-                                document.getElementById('purity-telemetry-text').innerText = `${purity}%`;
-                                document.getElementById('purity-telemetry-bar').style.width = `${purity}%`;
-
-                                if (purity >= 100 && !gameFinished) {
-                                    gameFinished = true;
-                                    triggerPurityMetricsUnlock();
+                                // Check if this layer is active and not yet completed
+                                const activeObj = activePayload.objectives.find(o => o.id === layerId);
+                                if (activeObj && !activeObj.isCompleted) {
+                                    const stats = layerStats[layerId];
+                                    if (stats && stats.destroyed < stats.target) {
+                                        stats.destroyed++;
+                                        
+                                        // If local destruction hits target (6), claim milestone!
+                                        if (stats.destroyed >= stats.target) {
+                                            stats.completed = true;
+                                            if (window.GameState) {
+                                                window.GameState.claimMilestone(layerId);
+                                                activeObj.isCompleted = true; // sync local
+                                            }
+                                        }
+                                        
+                                        // Update the checklist UI & displays
+                                        renderChecklist();
+                                        updatePurityDisplays();
+                                    }
                                 }
                             }
                         }

@@ -156,6 +156,7 @@
                 <div class="space-y-2">
                     <h3 id="sidebar-mission-title" class="font-bold text-[12.5px] text-on-surface leading-tight">Loading staged mission...</h3>
                     <p id="sidebar-mission-desc" class="text-[11px] text-on-surface-variant leading-relaxed">Verifying secure communications channel...</p>
+                    <div id="objectives-checklist" class="mt-3 pt-3 border-t border-outline-variant/30 space-y-1"></div>
                     <div class="flex justify-between items-center pt-2 border-t border-outline-variant/30 font-data text-[10px]">
                         <span class="opacity-70">CONTRACT VALUE:</span>
                         <span id="sidebar-mission-rewards" class="text-tertiary font-bold">--- CR // --- SI</span>
@@ -245,9 +246,9 @@
                     <span id="sync-telemetry" class="font-data text-[10px] text-error font-bold tracking-wide animate-pulse">UNALIGNED // 0% MATCH</span>
                 </div>
                 
-                <div class="grid grid-cols-2 gap-6">
+                <div id="sliders-container" class="grid grid-cols-2 gap-6">
                     <!-- Amplitude Slider -->
-                    <div class="space-y-1.5">
+                    <div class="space-y-1.5" id="amplitude-slider-box">
                         <div class="flex justify-between font-data text-[10px] text-on-surface-variant">
                             <span>CORRELATOR AMPLITUDE (A)</span>
                             <span id="amplitude-val" class="text-secondary font-bold">30%</span>
@@ -256,12 +257,21 @@
                     </div>
 
                     <!-- Frequency Slider -->
-                    <div class="space-y-1.5">
+                    <div class="space-y-1.5" id="frequency-slider-box">
                         <div class="flex justify-between font-data text-[10px] text-on-surface-variant">
                             <span>CORRELATOR FREQUENCY (F)</span>
                             <span id="frequency-val" class="text-secondary font-bold">0.020 Hz</span>
                         </div>
                         <input type="range" id="slider-frequency" min="10" max="80" step="1" value="20" class="w-full h-1 bg-surface-container-lowest rounded-sm appearance-none cursor-pointer accent-primary border border-outline-variant/40">
+                    </div>
+
+                    <!-- Noise Filtering Slider (Hidden unless critical difficulty) -->
+                    <div class="space-y-1.5 hidden" id="noise-slider-box">
+                        <div class="flex justify-between font-data text-[10px] text-on-surface-variant">
+                            <span>NOISE FILTERING (N)</span>
+                            <span id="noise-val" class="text-secondary font-bold">50%</span>
+                        </div>
+                        <input type="range" id="slider-noise" min="10" max="90" step="1" value="50" class="w-full h-1 bg-surface-container-lowest rounded-sm appearance-none cursor-pointer accent-primary border border-outline-variant/40">
                     </div>
                 </div>
             </div>
@@ -302,8 +312,15 @@
     </footer>
 
     <script>
+    <script>
         // 1. STATE & SECURITY CHECK (Staged Transaction Pattern Safeguards)
         let activePayload = null;
+        let finishedPhase = false;
+
+        // Seeded random target variables (stable across reloads for same mission)
+        let targetA = 50;
+        let targetF = 30;
+        let targetNoise = 50;
 
         function verifyAndLoadState() {
             const serialized = localStorage.getItem('active_mission_payload');
@@ -314,7 +331,7 @@
             }
             try {
                 activePayload = JSON.parse(serialized);
-                if (!activePayload || !activePayload.missionId) {
+                if (!activePayload || !activePayload.missionId || !activePayload.objectives || !Array.isArray(activePayload.objectives) || activePayload.objectives.length === 0) {
                     window.location.href = '../index.html';
                     return;
                 }
@@ -324,10 +341,104 @@
                 return;
             }
 
+            // Simple deterministic seed based on missionId string
+            let seed = 0;
+            for (let i = 0; i < activePayload.missionId.length; i++) {
+                seed += activePayload.missionId.charCodeAt(i);
+            }
+
+            // Pseudo-random number generator using seed
+            function seededRandom(min, max) {
+                const x = Math.sin(seed++) * 10000;
+                return min + Math.floor((x - Math.floor(x)) * (max - min + 1));
+            }
+
+            targetA = seededRandom(35, 70);
+            targetF = seededRandom(18, 60);
+            targetNoise = seededRandom(20, 80);
+
             // Populate Sidebar Active Mission telemetry card
             document.getElementById('sidebar-mission-title').innerText = activePayload.objectiveText.toUpperCase();
             document.getElementById('sidebar-mission-desc').innerText = `Cosmic interferences detected in millimeter band frequencies. Manipulate Amplitude and Frequency variables below to match telemetry.`;
             document.getElementById('sidebar-mission-rewards').innerText = `+${activePayload.creditReward} CR // +${activePayload.intelReward} SI`;
+
+            // Adjust sliders container grid columns and noise box visibility if noise objective exists
+            const noiseBox = document.getElementById('noise-slider-box');
+            const slidersContainer = document.getElementById('sliders-container');
+            const hasNoise = activePayload.objectives.some(o => o.id === 'at_noise');
+            if (hasNoise && noiseBox && slidersContainer) {
+                noiseBox.classList.remove('hidden');
+                slidersContainer.classList.remove('grid-cols-2');
+                slidersContainer.classList.add('grid-cols-3');
+            }
+
+            // Initialize slider elements with completed statuses or values
+            const sliderA = document.getElementById('slider-amplitude');
+            const sliderF = document.getElementById('slider-frequency');
+            const sliderNoise = document.getElementById('slider-noise');
+
+            activePayload.objectives.forEach(obj => {
+                if (obj.id === 'at_amplitude' && obj.isCompleted) {
+                    if (sliderA) {
+                        sliderA.value = targetA;
+                        sliderA.disabled = true;
+                    }
+                } else if (obj.id === 'at_frequency' && obj.isCompleted) {
+                    if (sliderF) {
+                        sliderF.value = targetF;
+                        sliderF.disabled = true;
+                    }
+                } else if (obj.id === 'at_noise' && obj.isCompleted) {
+                    if (sliderNoise) {
+                        sliderNoise.value = targetNoise;
+                        sliderNoise.disabled = true;
+                    }
+                }
+            });
+
+            renderChecklist();
+            updateMatchDisplays();
+        }
+
+        function renderChecklist() {
+            const container = document.getElementById('objectives-checklist');
+            if (!container) return;
+
+            container.innerHTML = '';
+            activePayload.objectives.forEach((obj, idx) => {
+                const isCompleted = obj.isCompleted;
+                const zebraClass = idx % 2 === 0 ? 'bg-white/[0.02]' : 'bg-transparent';
+                
+                const row = document.createElement('div');
+                row.className = `flex items-center justify-between p-2 rounded-sm border border-outline-variant/10 ${zebraClass} transition-all`;
+                
+                const textClass = isCompleted ? 'text-tertiary line-through font-headline' : 'text-on-surface font-headline';
+                const icon = isCompleted ? 'task_alt' : 'radio_button_unchecked';
+                const iconColor = isCompleted ? 'text-tertiary' : 'text-outline';
+                const statusText = isCompleted ? 'ALIGNED' : 'PENDING';
+
+                row.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-[15px] ${iconColor}">${icon}</span>
+                        <span class="text-[11px] leading-none ${textClass}">${obj.text}</span>
+                    </div>
+                    <span class="font-data text-[10px] ${isCompleted ? 'text-tertiary' : 'text-error/70'}">${statusText}</span>
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        function checkAllObjectivesCompleted() {
+            if (!activePayload || !activePayload.objectives) return false;
+            return activePayload.objectives.every(o => o.isCompleted);
+        }
+
+        function updateMatchDisplays() {
+            const allDone = checkAllObjectivesCompleted();
+            if (allDone && !finishedPhase) {
+                finishedPhase = true;
+                triggerSignalComplete();
+            }
         }
 
         // Run state safeguard checks immediately upon parsing
@@ -350,18 +461,15 @@
             const ch = canvas.height;
             const cy = ch / 2;
 
-            // Generate stable randomized targets for amplitude (A) and frequency (F) indexes
-            const targetA = 35 + Math.floor(Math.random() * 35); // Target height: 35px - 70px
-            const targetF = 18 + Math.floor(Math.random() * 42); // Target frequency index: 18 - 60
-
             let time = 0;
-            let finishedPhase = false;
 
             // Grab elements
             const sliderA = document.getElementById('slider-amplitude');
             const sliderF = document.getElementById('slider-frequency');
+            const sliderNoise = document.getElementById('slider-noise');
             const ampText = document.getElementById('amplitude-val');
             const freqText = document.getElementById('frequency-val');
+            const noiseText = document.getElementById('noise-val');
             const telemetryText = document.getElementById('sync-telemetry');
 
             function renderOscilloscope() {
@@ -400,34 +508,84 @@
                 // Get dynamic slider values
                 const userA = parseInt(sliderA.value, 10);
                 const userF = parseInt(sliderF.value, 10);
+                let userNoise = 50;
+                if (sliderNoise) {
+                    userNoise = parseInt(sliderNoise.value, 10);
+                }
 
                 // Update UI text labels
-                ampText.innerText = `${userA}%`;
-                freqText.innerText = `${(userF / 1000).toFixed(3)} Hz`;
+                if (ampText) ampText.innerText = `${userA}%`;
+                if (freqText) freqText.innerText = `${(userF / 1000).toFixed(3)} Hz`;
+                if (noiseText) noiseText.innerText = `${userNoise}%`;
 
-                // Compute relative offsets and match index
-                const diffA = Math.abs(userA - targetA);
-                const diffF = Math.abs(userF - targetF);
+                // Check tolerances and claim milestones
+                if (activePayload && activePayload.objectives) {
+                    activePayload.objectives.forEach(obj => {
+                        if (obj.isCompleted) return;
 
-                const errorA = diffA / targetA;
-                const errorF = diffF / targetF;
-
-                // Match coefficient math
-                const matchPct = Math.max(0, Math.floor(100 - (errorA * 55 + errorF * 55)));
-
-                // Set Strict 2% Tolerance Window criteria
-                const withinTolerance = (diffA <= 1.8) && (diffF <= 1.2);
+                        if (obj.id === 'at_amplitude') {
+                            const diffA = Math.abs(userA - targetA);
+                            if (diffA <= 1.4) {
+                                obj.isCompleted = true;
+                                sliderA.disabled = true;
+                                if (window.GameState) {
+                                    window.GameState.claimMilestone('at_amplitude');
+                                }
+                                renderChecklist();
+                                updateMatchDisplays();
+                            }
+                        } else if (obj.id === 'at_frequency') {
+                            const diffF = Math.abs(userF - targetF);
+                            if (diffF <= 1.4) {
+                                obj.isCompleted = true;
+                                sliderF.disabled = true;
+                                if (window.GameState) {
+                                    window.GameState.claimMilestone('at_frequency');
+                                }
+                                renderChecklist();
+                                updateMatchDisplays();
+                            }
+                        } else if (obj.id === 'at_noise') {
+                            const diffNoise = Math.abs(userNoise - targetNoise);
+                            if (diffNoise <= 1.6) {
+                                obj.isCompleted = true;
+                                if (sliderNoise) sliderNoise.disabled = true;
+                                if (window.GameState) {
+                                    window.GameState.claimMilestone('at_noise');
+                                }
+                                renderChecklist();
+                                updateMatchDisplays();
+                            }
+                        }
+                    });
+                }
 
                 // Telemetry matching feedback
-                if (withinTolerance) {
+                const allDone = checkAllObjectivesCompleted();
+                if (allDone) {
                     telemetryText.innerText = "COHERENT WAVEFRONT // 100% SYNC";
                     telemetryText.className = "font-data text-[10px] text-tertiary font-bold tracking-wide";
-                    if (!finishedPhase) {
-                        finishedPhase = true;
-                        triggerSignalComplete();
-                    }
                 } else {
-                    telemetryText.innerText = `PHASE DEVIATION // ${matchPct}% MATCH`;
+                    // Compute a precise active matching percent
+                    let currentProgress = 0;
+                    activePayload.objectives.forEach(obj => {
+                        if (obj.isCompleted) {
+                            currentProgress += 100;
+                        } else {
+                            if (obj.id === 'at_amplitude') {
+                                const diffA = Math.abs(userA - targetA);
+                                currentProgress += Math.max(0, 100 - (diffA / targetA) * 100);
+                            } else if (obj.id === 'at_frequency') {
+                                const diffF = Math.abs(userF - targetF);
+                                currentProgress += Math.max(0, 100 - (diffF / targetF) * 100);
+                            } else if (obj.id === 'at_noise') {
+                                const diffNoise = Math.abs(userNoise - targetNoise);
+                                currentProgress += Math.max(0, 100 - (diffNoise / targetNoise) * 100);
+                            }
+                        }
+                    });
+                    const avgProgress = Math.floor(currentProgress / activePayload.objectives.length);
+                    telemetryText.innerText = `PHASE DEVIATION // ${avgProgress}% MATCH`;
                     telemetryText.className = "font-data text-[10px] text-error font-bold tracking-wide animate-pulse";
                 }
 
@@ -448,10 +606,19 @@
                     const targetF_scaled = targetF / 400;
                     const baseSine = Math.sin(x * targetF_scaled + time) * targetA;
 
-                    // Formulate dynamic math noise that dampens as match improves!
+                    // Formulate dynamic math noise that dampens as Noise slider matches target!
                     let noise = 0;
                     if (!finishedPhase) {
-                        const noiseStrength = (100 - matchPct) / 10; // dampens noise as user gets close
+                        const hasNoiseObj = activePayload.objectives.some(o => o.id === 'at_noise');
+                        let noiseStrength = 0;
+                        if (hasNoiseObj) {
+                            const diffNoise = Math.abs(userNoise - targetNoise);
+                            noiseStrength = diffNoise / 2.5; // Starts noisy, smooths to near-zero
+                        } else {
+                            // Standard difficulty: use general slider completion distance
+                            let totalDiff = Math.abs(userA - targetA) + Math.abs(userF - targetF);
+                            noiseStrength = totalDiff / 2;
+                        }
                         const highFreq = Math.sin(x * 0.35 + time * 25) * 6;
                         const fuzzyGrit = (Math.random() - 0.5) * 4.5;
                         noise = (highFreq + fuzzyGrit) * (noiseStrength / 10);
@@ -489,7 +656,7 @@
                     ctx.restore();
                 }
 
-                // Draw scope overlays / scope markings
+                // Draw scope overlays
                 ctx.save();
                 ctx.font = '8px "JetBrains Mono"';
                 ctx.fillStyle = 'rgba(111, 238, 225, 0.35)';

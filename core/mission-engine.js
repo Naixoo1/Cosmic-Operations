@@ -180,6 +180,52 @@
             // Pick a random template
             const template = templates[Math.floor(Math.random() * templates.length)];
             
+            // Tiered narrative difficulties based on template rewards
+            const tier = (template.rewardCredits >= 120) ? 'critical' : 'standard';
+
+            // Generate exactly 2 distinct (Standard) or exactly 3 (Critical) concurrent objectives tailored to that station
+            const objectives = [];
+            if (site === 'mauna_kea') {
+                if (tier === 'critical') {
+                    objectives.push(
+                        { id: 'mk_troposphere', text: 'Purify Troposphere Layer', isCompleted: false, payoutShare: 0.33 },
+                        { id: 'mk_stratosphere', text: 'Purify Stratosphere Layer', isCompleted: false, payoutShare: 0.33 },
+                        { id: 'mk_leo', text: 'Purify LEO Layer', isCompleted: false, payoutShare: 0.34 }
+                    );
+                } else {
+                    objectives.push(
+                        { id: 'mk_troposphere', text: 'Purify Troposphere Layer', isCompleted: false, payoutShare: 0.50 },
+                        { id: 'mk_stratosphere', text: 'Purify Stratosphere Layer', isCompleted: false, payoutShare: 0.50 }
+                    );
+                }
+            } else if (site === 'atacama') {
+                if (tier === 'critical') {
+                    objectives.push(
+                        { id: 'at_amplitude', text: 'Match Target Amplitude', isCompleted: false, payoutShare: 0.33 },
+                        { id: 'at_frequency', text: 'Match Target Frequency', isCompleted: false, payoutShare: 0.33 },
+                        { id: 'at_noise', text: 'Match Noise Filtering', isCompleted: false, payoutShare: 0.34 }
+                    );
+                } else {
+                    objectives.push(
+                        { id: 'at_amplitude', text: 'Match Target Amplitude', isCompleted: false, payoutShare: 0.50 },
+                        { id: 'at_frequency', text: 'Match Target Frequency', isCompleted: false, payoutShare: 0.50 }
+                    );
+                }
+            } else if (site === 'bosscha') {
+                if (tier === 'critical') {
+                    objectives.push(
+                        { id: 'bs_lock', text: 'Lock Target Coordinates', isCompleted: false, payoutShare: 0.33 },
+                        { id: 'bs_calibrate', text: 'Calibrate Photometer Sensor', isCompleted: false, payoutShare: 0.33 },
+                        { id: 'bs_transit', text: 'Capture Transit Minima', isCompleted: false, payoutShare: 0.34 }
+                    );
+                } else {
+                    objectives.push(
+                        { id: 'bs_lock', text: 'Lock Target Coordinates', isCompleted: false, payoutShare: 0.50 },
+                        { id: 'bs_transit', text: 'Capture Transit Minima', isCompleted: false, payoutShare: 0.50 }
+                    );
+                }
+            }
+
             return {
                 id: `mission-${site}-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
                 site: site,
@@ -188,7 +234,9 @@
                 rewardCredits: template.rewardCredits,
                 rewardScience: template.rewardScience,
                 rewardSafety: template.rewardSafety,
-                status: 'active'
+                status: 'active',
+                tier: tier,
+                objectives: objectives
             };
         },
 
@@ -215,7 +263,9 @@
                 objectiveText: mission.title,
                 creditReward: mission.rewardCredits,
                 intelReward: mission.rewardScience,
-                safetyReward: mission.rewardSafety
+                safetyReward: mission.rewardSafety,
+                tier: mission.tier || 'standard',
+                objectives: mission.objectives || []
             };
 
             localStorage.setItem('active_mission_payload', JSON.stringify(payload));

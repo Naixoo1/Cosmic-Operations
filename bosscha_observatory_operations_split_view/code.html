@@ -161,6 +161,7 @@
                 <div class="space-y-2">
                     <h3 id="sidebar-mission-title" class="font-bold text-[12.5px] text-on-surface leading-tight">Loading staged mission...</h3>
                     <p id="sidebar-mission-desc" class="text-[11px] text-on-surface-variant leading-relaxed">Verifying secure communications channel...</p>
+                    <div id="objectives-checklist" class="mt-3 pt-3 border-t border-outline-variant/30 space-y-1"></div>
                     <div class="flex justify-between items-center pt-2 border-t border-outline-variant/30 font-data text-[10px]">
                         <span class="opacity-70">CONTRACT VALUE:</span>
                         <span id="sidebar-mission-rewards" class="text-tertiary font-bold">--- CR // --- SI</span>
@@ -199,6 +200,16 @@
                     </div>
                     <div class="relative w-full h-2 bg-gradient-to-r from-teal-900 via-yellow-700 to-red-900 rounded-full overflow-hidden">
                         <div id="bortle-marker" class="absolute top-0 bottom-0 w-1 bg-white border border-black shadow" style="left: 45%;"></div>
+                    </div>
+                    <!-- Conditional Calibration Box for Critical Tier -->
+                    <div id="calibration-box" class="hidden mt-3 pt-3 border-t border-outline-variant/30 space-y-2">
+                        <div class="text-[10px] font-data text-on-surface-variant uppercase tracking-wider">// PHOTO DETECTOR CALIBRATION</div>
+                        <button id="btn-calibrate" class="w-full py-2 bg-white/[0.02] hover:bg-white/[0.06] border border-outline-variant/40 text-on-surface font-headline text-[11px] font-bold tracking-wider rounded-sm transition-all uppercase">
+                            [ CALIBRATE PHOTO DETECTOR ]
+                        </button>
+                        <div id="calibration-progress-container" class="hidden w-full h-1.5 bg-surface-container-lowest rounded-sm overflow-hidden border border-outline-variant/20">
+                            <div id="calibration-progress-bar" class="h-full bg-primary transition-all duration-75" style="width: 0%;"></div>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -323,6 +334,22 @@
     <script>
         // 1. STATE & SECURITY CHECK (Staged Transaction Pattern Safeguards)
         let activePayload = null;
+        let gameFinished = false;
+
+        // Seeded random target variables (stable across reloads for same mission)
+        let targetStarX = 275;
+        let targetStarY = 110;
+
+        function isObjectiveCompleted(id) {
+            if (!activePayload || !activePayload.objectives) return false;
+            const obj = activePayload.objectives.find(o => o.id === id);
+            return obj ? obj.isCompleted : true; // default true if not in objectives (e.g. bs_calibrate in standard)
+        }
+
+        function checkAllObjectivesCompleted() {
+            if (!activePayload || !activePayload.objectives) return false;
+            return activePayload.objectives.every(o => o.isCompleted);
+        }
 
         function verifyAndLoadState() {
             const serialized = localStorage.getItem('active_mission_payload');
@@ -333,7 +360,7 @@
             }
             try {
                 activePayload = JSON.parse(serialized);
-                if (!activePayload || !activePayload.missionId) {
+                if (!activePayload || !activePayload.missionId || !activePayload.objectives || !Array.isArray(activePayload.objectives) || activePayload.objectives.length === 0) {
                     window.location.href = '../index.html';
                     return;
                 }
@@ -343,10 +370,105 @@
                 return;
             }
 
+            // Simple deterministic seed based on missionId string
+            let seed = 0;
+            for (let i = 0; i < activePayload.missionId.length; i++) {
+                seed += activePayload.missionId.charCodeAt(i);
+            }
+
+            // Pseudo-random number generator using seed
+            function seededRandom(min, max) {
+                const x = Math.sin(seed++) * 10000;
+                return min + (x - Math.floor(x)) * (max - min);
+            }
+
+            // Target star coordinates (center is 275, 110. Canvas size is 550, 220)
+            // Limit offset so it stays visually nice and central but off-center
+            targetStarX = 275 + seededRandom(-85, 85);
+            targetStarY = 110 + seededRandom(-25, 25);
+
             // Populate Sidebar Active Mission telemetry card
             document.getElementById('sidebar-mission-title').innerText = activePayload.objectiveText.toUpperCase();
             document.getElementById('sidebar-mission-desc').innerText = `Locked on target transit candidates. Align photometer capturing mechanisms within the lowest 3% transit minima point to verify habitable indices.`;
             document.getElementById('sidebar-mission-rewards').innerText = `+${activePayload.creditReward} CR // +${activePayload.intelReward} SI`;
+
+            // Toggle calibration box if objective is present
+            const hasCalibrate = activePayload.objectives.some(o => o.id === 'bs_calibrate');
+            const calBox = document.getElementById('calibration-box');
+            if (hasCalibrate && calBox) {
+                calBox.classList.remove('hidden');
+            }
+
+            // Initialize calibration UI state if already completed
+            const isCalCompleted = isObjectiveCompleted('bs_calibrate');
+            if (isCalCompleted && hasCalibrate) {
+                const btnCalibrate = document.getElementById('btn-calibrate');
+                const calProgressContainer = document.getElementById('calibration-progress-container');
+                const calProgressBar = document.getElementById('calibration-progress-bar');
+                if (btnCalibrate) {
+                    btnCalibrate.disabled = true;
+                    btnCalibrate.innerText = "[ CALIBRATION OK ]";
+                    btnCalibrate.className = "w-full py-2 bg-white/[0.02] text-tertiary border border-outline-variant/40 font-headline text-[11px] font-bold tracking-wider rounded-sm transition-all uppercase cursor-not-allowed";
+                }
+                if (calProgressContainer) calProgressContainer.classList.remove('hidden');
+                if (calProgressBar) {
+                    calProgressBar.style.width = "100%";
+                    calProgressBar.className = "h-full bg-tertiary";
+                }
+            }
+
+            // Initialize log transit button state if already completed
+            const btnLog = document.getElementById('btn-log-transit');
+            if (isObjectiveCompleted('bs_transit') && btnLog) {
+                btnLog.disabled = true;
+                btnLog.className = "px-6 py-2.5 bg-outline-variant text-on-surface-variant font-data text-[11px] font-bold tracking-wider rounded-sm transition-all uppercase flex-shrink-0 cursor-not-allowed";
+                btnLog.innerText = "[ TRANSIT LOGGED ]";
+            }
+
+            renderChecklist();
+            verifyCompletion();
+        }
+
+        function renderChecklist() {
+            const container = document.getElementById('objectives-checklist');
+            if (!container) return;
+
+            container.innerHTML = '';
+            activePayload.objectives.forEach((obj, idx) => {
+                const isCompleted = obj.isCompleted;
+                const zebraClass = idx % 2 === 0 ? 'bg-white/[0.02]' : 'bg-transparent';
+                
+                const row = document.createElement('div');
+                row.className = `flex items-center justify-between p-2 rounded-sm border border-outline-variant/10 ${zebraClass} transition-all`;
+                
+                const textClass = isCompleted ? 'text-tertiary line-through font-headline' : 'text-on-surface font-headline';
+                const icon = isCompleted ? 'task_alt' : 'radio_button_unchecked';
+                const iconColor = isCompleted ? 'text-tertiary' : 'text-outline';
+                const statusText = isCompleted ? 'ALIGNED' : 'PENDING';
+
+                row.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-[15px] ${iconColor}">${icon}</span>
+                        <span class="text-[11px] leading-none ${textClass}">${obj.text}</span>
+                    </div>
+                    <span class="font-data text-[10px] ${isCompleted ? 'text-tertiary' : 'text-error/70'}">${statusText}</span>
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        function verifyCompletion() {
+            if (checkAllObjectivesCompleted() && !gameFinished) {
+                gameFinished = true;
+                
+                // Show completion overlay after a slight delay
+                setTimeout(() => {
+                    const overlay = document.getElementById('photometer-complete-overlay');
+                    if (overlay) {
+                        overlay.classList.remove('hidden');
+                    }
+                }, 1200);
+            }
         }
 
         // Run state safeguard checks immediately upon parsing
@@ -391,7 +513,6 @@
             let time = 0;
             let frameCounter = 0;
             const transitPeriod = 600; // Orbit takes ~10 seconds at 60fps
-            let gameFinished = false;
 
             // Generate Twinkling Background Stars
             const bgStars = [];
@@ -419,13 +540,125 @@
             const syncText = document.getElementById('chrono-sync-telemetry');
             const controlsConsole = document.getElementById('controls-console');
 
+            // Set default logging message on load
+            if (chronoLogs) {
+                if (isObjectiveCompleted('bs_transit')) {
+                    chronoLogs.innerText = `[SUCCESS] TRANSIT MINIMA CAPTURED AND LOGGED.`;
+                    chronoLogs.parentElement.className = "flex-grow bg-surface-container-lowest border border-tertiary p-2.5 rounded-sm h-[44px] flex items-center shadow-[0_0_8px_rgba(126,240,167,0.15)]";
+                    chronoLogs.className = "font-data text-[10px] text-tertiary tracking-wide font-bold";
+                } else if (!isObjectiveCompleted('bs_lock')) {
+                    chronoLogs.innerText = "READY FOR COORDINATE LOCK. CLICK THE STAR IN THE VIEWPORT RETICLE.";
+                } else {
+                    chronoLogs.innerText = "READY FOR TRANSIT CAPTURE. WATCH FOR LUMINOSITY DIP.";
+                }
+            }
+
+            // Viewfinder Click Handler for Coordinate Lock
+            canvas.addEventListener('click', (event) => {
+                if (gameFinished) return;
+                if (isObjectiveCompleted('bs_lock')) return;
+
+                const rect = canvas.getBoundingClientRect();
+                const x = (event.clientX - rect.left) * (canvas.width / rect.width);
+                const y = (event.clientY - rect.top) * (canvas.height / rect.height);
+
+                const dist = Math.hypot(x - targetStarX, y - targetStarY);
+                if (dist <= 15) {
+                    // Lock coordinates!
+                    const lockObjective = activePayload.objectives.find(o => o.id === 'bs_lock');
+                    if (lockObjective) {
+                        lockObjective.isCompleted = true;
+                    }
+                    if (window.GameState) {
+                        window.GameState.claimMilestone('bs_lock');
+                    }
+
+                    // Success visual cue
+                    chronoLogs.innerText = `[SUCCESS] COORDINATE LOCK ACQUIRED ON TARGET STAR.`;
+                    chronoLogs.parentElement.className = "flex-grow bg-surface-container-lowest border border-tertiary p-2.5 rounded-sm h-[44px] flex items-center shadow-[0_0_8px_rgba(126,240,167,0.15)]";
+                    chronoLogs.className = "font-data text-[10px] text-tertiary tracking-wide font-bold";
+
+                    setTimeout(() => {
+                        if (!gameFinished && !isObjectiveCompleted('bs_transit')) {
+                            chronoLogs.parentElement.className = "flex-grow bg-surface-container-lowest border border-outline-variant/40 p-2.5 rounded-sm h-[44px] flex items-center transition-all duration-300";
+                            chronoLogs.className = "font-data text-[10px] text-on-surface-variant tracking-wide";
+                            chronoLogs.innerText = "READY FOR TRANSIT CAPTURE. WATCH FOR LUMINOSITY DIP.";
+                        }
+                    }, 2000);
+
+                    renderChecklist();
+                    verifyCompletion();
+                } else {
+                    // Missed click
+                    chronoLogs.innerText = "[ERROR] COORDINATE DEVIATION DETECTED // FIELD MISALIGNED";
+                    chronoLogs.parentElement.className = "flex-grow bg-surface-container-lowest border border-error/50 p-2.5 rounded-sm h-[44px] flex items-center transition-all duration-500 animate-pulse";
+                    chronoLogs.className = "font-data text-[10px] text-error tracking-wide font-bold uppercase";
+
+                    setTimeout(() => {
+                        if (!gameFinished && !isObjectiveCompleted('bs_lock')) {
+                            chronoLogs.parentElement.className = "flex-grow bg-surface-container-lowest border border-outline-variant/40 p-2.5 rounded-sm h-[44px] flex items-center transition-all duration-300";
+                            chronoLogs.className = "font-data text-[10px] text-on-surface-variant tracking-wide";
+                            chronoLogs.innerText = "READY FOR COORDINATE LOCK. CLICK THE STAR IN THE VIEWPORT RETICLE.";
+                        }
+                    }, 1200);
+                }
+            });
+
+            // Calibration Button Click Handler
+            const btnCalibrate = document.getElementById('btn-calibrate');
+            const calProgressContainer = document.getElementById('calibration-progress-container');
+            const calProgressBar = document.getElementById('calibration-progress-bar');
+
+            if (btnCalibrate) {
+                btnCalibrate.addEventListener('click', () => {
+                    if (gameFinished) return;
+                    if (isObjectiveCompleted('bs_calibrate')) return;
+
+                    btnCalibrate.disabled = true;
+                    btnCalibrate.innerText = "[ CALIBRATING... ]";
+                    btnCalibrate.className = "w-full py-2 bg-white/[0.02] text-outline border border-outline-variant/40 font-headline text-[11px] font-bold tracking-wider rounded-sm transition-all uppercase cursor-not-allowed";
+                    
+                    if (calProgressContainer) calProgressContainer.classList.remove('hidden');
+                    if (calProgressBar) calProgressBar.style.width = "0%";
+
+                    let progress = 0;
+                    const interval = setInterval(() => {
+                        progress += 2;
+                        if (calProgressBar) calProgressBar.style.width = `${progress}%`;
+
+                        if (progress >= 100) {
+                            clearInterval(interval);
+                            
+                            // Mark completed
+                            const calObjective = activePayload.objectives.find(o => o.id === 'bs_calibrate');
+                            if (calObjective) {
+                                calObjective.isCompleted = true;
+                            }
+                            
+                            if (window.GameState) {
+                                window.GameState.claimMilestone('bs_calibrate');
+                            }
+
+                            btnCalibrate.innerText = "[ CALIBRATION OK ]";
+                            btnCalibrate.className = "w-full py-2 bg-white/[0.02] text-tertiary border border-outline-variant/40 font-headline text-[11px] font-bold tracking-wider rounded-sm transition-all uppercase cursor-not-allowed";
+                            if (calProgressBar) calProgressBar.className = "h-full bg-tertiary";
+
+                            renderChecklist();
+                            verifyCompletion();
+                        }
+                    }, 40); // 100% over 2000ms
+                });
+            }
+
+            // Transit capture button click handler
             btnLog.addEventListener('click', () => {
                 if (gameFinished) return;
+                if (isObjectiveCompleted('bs_transit')) return;
 
                 // Re-calculate distance logic on click frame to maintain strict precision
                 let progress = (frameCounter % transitPeriod) / transitPeriod;
                 let px = progress * (cw + 120) - 60;
-                let dist = Math.abs(px - cx);
+                let dist = Math.abs(px - targetStarX);
                 const transitRadius = 60;
                 let baseLuminosity = 1.0;
 
@@ -438,26 +671,21 @@
                 // Check lowest 3% bottom floor threshold (baseLuminosity <= 0.7575)
                 if (baseLuminosity <= 0.7575) {
                     // Success!
-                    gameFinished = true;
-
-                    syncText.innerText = "ALIGNMENT SYNCED // DATA VERIFIED";
-                    syncText.className = "font-data text-[10px] text-tertiary font-bold tracking-wide";
-
-                    chronoLogs.innerText = `[SUCCESS] TRANSIT MINIMA CAPTURED AT ${(baseLuminosity * 100).toFixed(2)}% LUMINOSITY. TRANSMITTING TO MEMORY.`;
-                    chronoLogs.parentElement.className = "flex-grow bg-surface-container-lowest border border-tertiary p-2.5 rounded-sm h-[44px] flex items-center shadow-[0_0_8px_rgba(126,240,167,0.15)]";
-                    chronoLogs.className = "font-data text-[10px] text-tertiary tracking-wide font-bold";
+                    const transitObjective = activePayload.objectives.find(o => o.id === 'bs_transit');
+                    if (transitObjective) {
+                        transitObjective.isCompleted = true;
+                    }
+                    if (window.GameState) {
+                        window.GameState.claimMilestone('bs_transit');
+                    }
 
                     // Update controls button
                     btnLog.disabled = true;
                     btnLog.className = "px-6 py-2.5 bg-outline-variant text-on-surface-variant font-data text-[11px] font-bold tracking-wider rounded-sm transition-all uppercase flex-shrink-0 cursor-not-allowed";
+                    btnLog.innerText = "[ TRANSIT LOGGED ]";
 
-                    // Launch complete overlay modal
-                    setTimeout(() => {
-                        const overlay = document.getElementById('photometer-complete-overlay');
-                        if (overlay) {
-                            overlay.classList.remove('hidden');
-                        }
-                    }, 1200);
+                    renderChecklist();
+                    verifyCompletion();
 
                 } else {
                     // Timing missed (either too early or too late)
@@ -469,7 +697,7 @@
 
                     // Decay the flash smoothly back to warning error color after 600ms
                     setTimeout(() => {
-                        if (!gameFinished) {
+                        if (!gameFinished && !isObjectiveCompleted('bs_transit')) {
                             chronoLogs.parentElement.className = "flex-grow bg-surface-container-lowest border border-error/50 p-2.5 rounded-sm h-[44px] flex items-center transition-all duration-500";
                             chronoLogs.className = "font-data text-[10px] text-error tracking-wide font-bold animate-pulse";
                         }
@@ -493,16 +721,16 @@
 
                 let progress = 0;
                 let px = -100;
-                let py = cy;
+                let py = targetStarY;
                 let dist = 1000;
                 const transitRadius = 60;
                 let baseLuminosity = 1.0;
 
-                if (!gameFinished) {
+                if (!isObjectiveCompleted('bs_transit')) {
                     frameCounter++;
                     progress = (frameCounter % transitPeriod) / transitPeriod;
                     px = progress * (cw + 120) - 60;
-                    dist = Math.abs(px - cx);
+                    dist = Math.abs(px - targetStarX);
 
                     // Compute smooth parabolic curve dip
                     if (dist < transitRadius) {
@@ -545,10 +773,17 @@
                     }
                 } else {
                     // Freezes planet inside the minima during completion state
-                    progress = 0.5;
-                    px = cx;
+                    px = targetStarX;
+                    py = targetStarY;
                     dist = 0;
                     baseLuminosity = 0.75;
+                    
+                    document.getElementById('luminosity-text').innerText = "75.00%";
+                    const phaseText = document.getElementById('transit-phase-text');
+                    phaseText.innerText = "TRANSIT CAPTURED // SYSTEM STABLE";
+                    phaseText.className = "text-tertiary font-bold uppercase";
+                    syncText.innerText = "ALIGNMENT SYNCED // DATA VERIFIED";
+                    syncText.className = "font-data text-[10px] text-tertiary font-bold tracking-wide";
                 }
 
                 // --- DRAWING CANVAS 1: VIEWFINDER ---
@@ -568,7 +803,7 @@
                     ctx.restore();
                 });
 
-                // Viewing coordinate grid
+                // Viewing coordinate grid (fixed at center cx, cy)
                 ctx.save();
                 ctx.strokeStyle = 'rgba(111, 238, 225, 0.08)';
                 ctx.lineWidth = 1;
@@ -595,38 +830,77 @@
                 ctx.stroke();
                 ctx.restore();
 
-                // Prominent glowing target star
+                // Draw alignment line from center to targetStar if locked
+                if (isObjectiveCompleted('bs_lock')) {
+                    ctx.save();
+                    ctx.strokeStyle = 'rgba(126, 240, 167, 0.25)';
+                    ctx.setLineDash([2, 3]);
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.moveTo(cx, cy);
+                    ctx.lineTo(targetStarX, targetStarY);
+                    ctx.stroke();
+                    ctx.restore();
+                }
+
+                // Prominent glowing target star at seeded coordinates targetStarX, targetStarY
                 let pulseFactor = 1 + 0.05 * Math.sin(time * 3);
                 let starRadius = 13 * pulseFactor;
 
                 ctx.save();
                 ctx.fillStyle = 'rgba(111, 238, 225, 0.03)';
                 ctx.beginPath();
-                ctx.arc(cx, cy, starRadius * 3.8, 0, Math.PI * 2);
+                ctx.arc(targetStarX, targetStarY, starRadius * 3.8, 0, Math.PI * 2);
                 ctx.fill();
 
                 ctx.fillStyle = 'rgba(111, 238, 225, 0.12)';
                 ctx.beginPath();
-                ctx.arc(cx, cy, starRadius * 2.3, 0, Math.PI * 2);
+                ctx.arc(targetStarX, targetStarY, starRadius * 2.3, 0, Math.PI * 2);
                 ctx.fill();
 
-                ctx.fillStyle = 'rgba(111, 238, 225, 0.35)';
+                // Colors depend on coordinate lock state (teal vs green)
+                const isLocked = isObjectiveCompleted('bs_lock');
+                ctx.fillStyle = isLocked ? 'rgba(126, 240, 167, 0.35)' : 'rgba(111, 238, 225, 0.35)';
                 ctx.beginPath();
-                ctx.arc(cx, cy, starRadius * 1.4, 0, Math.PI * 2);
+                ctx.arc(targetStarX, targetStarY, starRadius * 1.4, 0, Math.PI * 2);
                 ctx.fill();
 
                 ctx.fillStyle = '#ffffff';
                 ctx.beginPath();
-                ctx.arc(cx, cy, starRadius * 0.7, 0, Math.PI * 2);
+                ctx.arc(targetStarX, targetStarY, starRadius * 0.7, 0, Math.PI * 2);
                 ctx.fill();
                 ctx.restore();
 
-                // Transit planetary asset
+                // Draw Lock brackets / reticle around target star
+                ctx.save();
+                if (isLocked) {
+                    ctx.strokeStyle = '#7ef0a7'; // Neon green
+                    ctx.lineWidth = 1.5;
+                    ctx.beginPath();
+                    ctx.arc(targetStarX, targetStarY, starRadius * 1.6, 0, Math.PI * 2);
+                    ctx.stroke();
+
+                    // Mini text showing LOCKED
+                    ctx.font = '7px "JetBrains Mono"';
+                    ctx.fillStyle = '#7ef0a7';
+                    ctx.fillText("LOCK:SECURE", targetStarX + 22, targetStarY + 3);
+                } else {
+                    // Blinking yellow/amber bracket
+                    ctx.strokeStyle = `rgba(255, 184, 102, ${0.4 + 0.3 * Math.sin(time * 6)})`;
+                    ctx.lineWidth = 1;
+                    ctx.setLineDash([3, 3]);
+                    ctx.beginPath();
+                    ctx.arc(targetStarX, targetStarY, starRadius * 1.6, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+                ctx.restore();
+
+                // Transit planetary asset moving across targetStarY
                 ctx.save();
                 ctx.shadowColor = 'rgba(111, 238, 225, 0.6)';
                 ctx.shadowBlur = 5;
                 ctx.fillStyle = '#050811';
-                ctx.strokeStyle = 'rgba(111, 238, 225, 0.5)';
+                ctx.strokeStyle = isLocked ? '#7ef0a7' : 'rgba(111, 238, 225, 0.5)';
                 ctx.lineWidth = 1.2;
                 ctx.beginPath();
                 ctx.arc(px, py, 7.5, 0, Math.PI * 2);
@@ -634,8 +908,8 @@
                 ctx.stroke();
                 ctx.restore();
 
-                // Target Lock brackets around planet during alignment
-                if (dist < 15 && !gameFinished) {
+                // Target Lock brackets around planet during alignment when near targetStarX
+                if (dist < 15 && !isObjectiveCompleted('bs_transit')) {
                     ctx.save();
                     ctx.strokeStyle = '#7ef0a7';
                     ctx.lineWidth = 1.5;
@@ -651,7 +925,6 @@
                 ctx.lineWidth = 1;
                 ctx.strokeRect(0, 0, cw, ch);
                 ctx.restore();
-
 
                 // --- DRAWING CANVAS 2: PLOTTER ---
                 pCtx.clearRect(0, 0, pw, ph);
@@ -692,27 +965,28 @@
                 let minZoneY1 = valToY(0.75);
                 let minZoneY2 = valToY(0.7575);
                 
-                pCtx.fillStyle = gameFinished ? 'rgba(126, 240, 167, 0.1)' : 'rgba(255, 184, 102, 0.05)';
+                const isTransitDone = isObjectiveCompleted('bs_transit');
+                pCtx.fillStyle = isTransitDone ? 'rgba(126, 240, 167, 0.1)' : 'rgba(255, 184, 102, 0.05)';
                 pCtx.fillRect(20, minZoneY2, pw - 40, minZoneY1 - minZoneY2);
 
-                pCtx.strokeStyle = gameFinished ? 'rgba(126, 240, 167, 0.25)' : 'rgba(255, 184, 102, 0.15)';
+                pCtx.strokeStyle = isTransitDone ? 'rgba(126, 240, 167, 0.25)' : 'rgba(255, 184, 102, 0.15)';
                 pCtx.setLineDash([2, 2]);
                 pCtx.beginPath();
                 pCtx.moveTo(20, minZoneY2); pCtx.lineTo(pw - 20, minZoneY2);
                 pCtx.stroke();
                 
                 pCtx.font = '7px "JetBrains Mono"';
-                pCtx.fillStyle = gameFinished ? 'rgba(126, 240, 167, 0.6)' : 'rgba(255, 184, 102, 0.5)';
+                pCtx.fillStyle = isTransitDone ? 'rgba(126, 240, 167, 0.6)' : 'rgba(255, 184, 102, 0.5)';
                 pCtx.fillText("TRANSIT MINIMA LOCK ZONE", pw - 150, minZoneY1 - 4);
                 pCtx.restore();
 
                 // Draw historical scrolling starlight line
                 if (history.length > 1) {
                     pCtx.save();
-                    pCtx.lineWidth = gameFinished ? 2.5 : 1.5;
-                    pCtx.strokeStyle = gameFinished ? '#7ef0a7' : 'rgba(111, 238, 225, 0.85)';
-                    pCtx.shadowColor = gameFinished ? '#7ef0a7' : 'rgba(111, 238, 225, 0.4)';
-                    pCtx.shadowBlur = gameFinished ? 8 : 4;
+                    pCtx.lineWidth = isTransitDone ? 2.5 : 1.5;
+                    pCtx.strokeStyle = isTransitDone ? '#7ef0a7' : 'rgba(111, 238, 225, 0.85)';
+                    pCtx.shadowColor = isTransitDone ? '#7ef0a7' : 'rgba(111, 238, 225, 0.4)';
+                    pCtx.shadowBlur = isTransitDone ? 8 : 4;
 
                     pCtx.beginPath();
                     for (let i = 0; i < history.length; i++) {
@@ -730,7 +1004,7 @@
                 }
 
                 // Drawing scan tracker bar
-                if (!gameFinished) {
+                if (!isTransitDone) {
                     let scanX = 20 + (history.length % maxHistory) * ((pw - 40) / maxHistory);
                     pCtx.save();
                     pCtx.strokeStyle = 'rgba(111, 238, 225, 0.25)';
