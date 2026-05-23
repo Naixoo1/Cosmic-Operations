@@ -1,0 +1,1516 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>COSMIC OPERATIONS COMMAND HUB // GLOBAL DIRECTORY</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <link href="assets/shared-styles.css" rel="stylesheet"/>
+    <style>
+        body {
+            background-color: #0f131d;
+            color: #dfe2f1;
+            overflow: hidden;
+            height: 100vh;
+        }
+        .matrix-grid {
+            background-image: 
+                linear-gradient(rgba(111, 238, 225, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(111, 238, 225, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+        
+        .zebra-row:nth-child(even) { background-color: rgba(255, 255, 255, 0.02); }
+        
+        .led-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: .4; transform: scale(0.92); }
+        }
+        .terminal-glow {
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.6), 0 0 15px rgba(111, 238, 225, 0.05);
+        }
+        
+        @keyframes boot-load {
+            0% { width: 0%; }
+            100% { width: 100%; }
+        }
+        .animate-progress {
+            animation: boot-load 2.2s cubic-bezier(0.1, 0.8, 0.2, 1) forwards;
+        }
+
+        /* Critical flashing red animations */
+        @keyframes emergency-pulse {
+            0%, 100% { background-color: rgba(255, 180, 171, 0.1); border-color: rgba(255, 180, 171, 0.3); }
+            50% { background-color: rgba(255, 180, 171, 0.25); border-color: rgba(255, 180, 171, 0.8); box-shadow: 0 0 15px rgba(255, 180, 171, 0.3); }
+        }
+        .emergency-active {
+            animation: emergency-pulse 1s infinite;
+        }
+
+        /* Fix layout tracking when mobile devices rotate to landscape mode */
+        /* Fix layout tracking when mobile devices rotate to landscape mode */
+        @media (max-height: 550px) and (orientation: landscape) {
+            body {
+                height: auto !important;
+                min-height: 100vh !important;
+                overflow-y: auto !important;
+            }
+            main {
+                height: auto !important;
+                overflow-y: visible !important;
+            }
+            .flex-grow.flex {
+                flex-direction: column !important;
+                overflow-y: visible !important;
+            }
+            section, aside, #radar-container {
+                width: 100% !important;
+                max-width: 100% !important;
+                height: auto !important;
+                overflow: visible !important;
+            }
+        }
+    </style>
+    <!-- Tailwind Configuration and tokens matching DESIGN.md -->
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface": "#0f131d",
+                    "surface-container-lowest": "#0a0e18",
+                    "surface-container-low": "#171b26",
+                    "surface-container": "#1c1f2a",
+                    "surface-container-high": "#262a35",
+                    "surface-container-highest": "#313540",
+                    "on-surface": "#dfe2f1",
+                    "on-surface-variant": "#bbc9c7",
+                    "outline-variant": "#3c4947",
+                    "primary": "#6feee1",
+                    "secondary": "#ffb866",
+                    "tertiary": "#7ef0a7",
+                    "error": "#ffb4ab"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "sm": "4px",
+                    "lg": "0.25rem"
+            },
+            "fontFamily": {
+                    "data": ["JetBrains Mono"],
+                    "headline": ["Inter"]
+            }
+          },
+        },
+      }
+    </script>
+
+    <!-- Core State, Mission and Progression Scripts -->
+    <script src="core/game-state.js"></script>
+    <script src="core/mission-engine.js"></script>
+    <script src="core/player-progression.js"></script>
+</head>
+<body class="flex flex-col min-h-screen md:h-screen overflow-x-hidden font-headline">
+
+    <!-- 1. GLOBAL STATUS DECK (TOP HEADER) -->
+    <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 bg-surface-container border-b border-outline-variant gap-3 shrink-0 z-10 relative">
+        <div class="flex items-center gap-3">
+            <span class="material-symbols-outlined text-primary text-xl">token</span>
+            <h1 class="text-sm font-bold tracking-wider text-primary font-headline">COSMIC OPS INFRASTRUCTURE</h1>
+        </div>
+        <div class="flex flex-wrap items-center gap-2 sm:gap-4 text-[11px]">
+            <a href="index.html" class="px-2 py-1 bg-surface-container-high border border-outline-variant rounded-sm text-text-muted hover:text-primary transition-colors">
+                [ EXIT TO PORTAL ]
+            </a>
+            <span class="text-outline-variant hidden sm:inline">|</span>
+            <div class="text-text-muted">
+                SECTOR STATUS: <span class="text-success font-bold">ONLINE</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow flex flex-col p-4 md:p-6 gap-6 overflow-y-auto md:overflow-hidden relative">
+        <div class="absolute inset-0 matrix-grid opacity-70 pointer-events-none z-0"></div>
+
+        <!-- Upper Grid Layout split into Manifest (Left) and Station selectors (Right) -->
+        <div class="flex-grow flex flex-col md:flex-row gap-6 overflow-y-auto md:overflow-hidden z-10">
+            
+            <!-- 2. COMBINED CHARACTER & REVENUE TELEMETRY (LEFT CORE PANEL) -->
+            <section class="w-full md:w-[420px] shrink-0 bg-surface-container-low border border-outline-variant p-4 flex flex-col gap-4 overflow-visible md:overflow-y-auto rounded-sm terminal-glow">
+                <div>
+                    <div class="bg-outline-variant/30 px-2 py-1 mb-2 rounded-sm">
+                        <h2 class="font-data text-[11px] font-bold tracking-widest text-on-surface uppercase">NASA SPECIALIST MANIFEST</h2>
+                    </div>
+                    <p class="text-body-sm text-[12px] text-on-surface-variant">Active personnel file & synchronization directory.</p>
+                </div>
+
+                <!-- Specialist Profile -->
+                <div class="bg-surface-container border border-outline-variant p-3 rounded-sm space-y-1">
+                    <div class="flex items-center gap-3">
+                        <span class="material-symbols-outlined text-primary text-3xl">account_circle</span>
+                        <div>
+                            <span id="manifest-title" class="font-data text-[11px] text-primary block uppercase font-bold">PRIORITY SPECIALIST</span>
+                            <span class="font-data text-[10px] text-on-surface-variant block">// SPECIAL COpS UNIT</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- High-density Monospaced Stats Table -->
+                <div class="bg-surface-container-lowest border border-outline-variant rounded-sm font-data text-[11px] text-on-surface-variant divide-y divide-outline-variant/30">
+                    <div class="zebra-row p-2 flex justify-between">
+                        <span class="opacity-70">SPECIALIST LEVEL:</span>
+                        <span id="manifest-level" class="text-primary font-bold">LVL --</span>
+                    </div>
+                    <div class="zebra-row p-2 flex justify-between">
+                        <span class="opacity-70">MAX SYSTEM HEALTH:</span>
+                        <span id="manifest-health" class="text-tertiary font-bold">--- HP</span>
+                    </div>
+                    <div class="zebra-row p-2 flex justify-between">
+                        <span class="opacity-70">DEFENSE RANGE:</span>
+                        <span id="manifest-defense" class="text-secondary font-bold">-- km</span>
+                    </div>
+                    <div class="zebra-row p-2 flex justify-between">
+                        <span class="opacity-70">CREDIT BALANCE (CR):</span>
+                        <span id="manifest-credits" class="text-on-surface font-bold">---</span>
+                    </div>
+                    <div class="zebra-row p-2 flex justify-between">
+                        <span class="opacity-70">SCIENCE INTEL (SI):</span>
+                        <span id="manifest-science" class="text-on-surface font-bold">---</span>
+                    </div>
+                    <div class="zebra-row p-2 flex justify-between">
+                        <span class="opacity-70">INTELLIGENCE QUOTIENT:</span>
+                        <span id="manifest-iq" class="text-on-surface font-bold">---</span>
+                    </div>
+                </div>
+
+                <!-- 3. REACTIVE ORBITAL THREAT GRID MONITOR -->
+                <div class="flex-grow flex flex-col justify-end pt-3 border-t border-outline-variant/50">
+                    <div class="bg-outline-variant/30 px-2 py-1 mb-2 rounded-sm">
+                        <h2 class="font-data text-[11px] font-bold tracking-widest text-on-surface uppercase">ORBITAL THREAT MONITOR</h2>
+                    </div>
+                    <div id="threat-indicator-card" class="bg-surface-container border border-primary p-3 rounded-sm space-y-3 transition-all duration-300">
+                        <div class="flex justify-between items-center">
+                            <span class="font-data text-[9px] text-on-surface-variant block uppercase font-bold">SAFETY RATING</span>
+                            <span id="threat-status-badge" class="font-data text-[9px] text-primary bg-primary/10 border border-primary/20 px-1.5 py-0.5 rounded-sm uppercase font-bold">NOMINAL</span>
+                        </div>
+                        <div class="flex justify-between items-baseline">
+                            <span id="threat-percent" class="font-data text-2xl font-bold text-primary">100%</span>
+                            <span class="font-data text-[8px] text-on-surface-variant">STABILITY THRESHOLD: &ge; 80%</span>
+                        </div>
+                        <!-- Safety Bar -->
+                        <div class="w-full h-2.5 bg-surface-container-lowest border border-outline-variant p-0.5 rounded-sm">
+                            <div id="threat-bar" class="h-full bg-primary rounded-sm transition-all duration-300" style="width: 100%"></div>
+                        </div>
+
+                        <!-- Side-by-Side Radar and Telemetry Grid -->
+                        <div class="grid grid-cols-12 gap-3 pt-3 border-t border-outline-variant/30">
+                            <!-- Canvas Container -->
+                            <div class="col-span-6 flex justify-center items-center">
+                                <canvas id="spaceRadar" width="220" height="220" class="cursor-pointer bg-surface-container-lowest border border-outline-variant rounded-sm w-full aspect-square"></canvas>
+                            </div>
+                            <!-- Telemetry Readout Terminal -->
+                            <div id="radarTelemetry" class="col-span-6 font-data text-[9px] text-on-surface-variant flex flex-col justify-between h-[180px] bg-surface-container-lowest p-2 border border-outline-variant rounded-sm overflow-y-auto">
+                                <div id="telemetry-default" class="text-center my-auto opacity-50 flex flex-col items-center">
+                                    <span class="material-symbols-outlined text-lg block mb-1">radar</span>
+                                    <span>NO TARGET SELECTED</span>
+                                    <span class="text-[7px] mt-1">// CLICK RADAR VECTOR</span>
+                                </div>
+                                <div id="telemetry-details" class="hidden space-y-1.5 h-full flex flex-col justify-between">
+                                    <div class="space-y-1">
+                                        <div class="text-primary font-bold border-b border-outline-variant pb-1 uppercase truncate text-[10px]" id="telemetry-name">---</div>
+                                        <div class="flex justify-between">
+                                            <span class="opacity-60">DESIGN:</span>
+                                            <span id="telemetry-designation" class="text-on-surface truncate max-w-[80px]">---</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span class="opacity-60">THREAT:</span>
+                                            <span id="telemetry-threat" class="text-on-surface font-bold">---</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span class="opacity-60">ALTITUDE:</span>
+                                            <span id="telemetry-altitude" class="text-on-surface">---</span>
+                                        </div>
+                                    </div>
+                                    <div id="telemetry-warning-box" class="hidden p-1 bg-error/10 border border-error/30 text-[8px] text-error font-bold rounded-sm animate-pulse uppercase leading-normal">
+                                        ---
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Center/Right Grid layout displaying selection nodes & interactive grids -->
+            <section class="flex-grow flex flex-col gap-6 overflow-hidden">
+                <div class="bg-surface-container border border-outline-variant p-4 rounded-sm flex justify-between items-center shrink-0">
+                    <div>
+                        <h1 class="text-lg font-bold tracking-tight text-primary">SECTOR MATRIX LINK DIRECTORY</h1>
+                        <p class="text-body-sm text-[12px] text-on-surface-variant mt-0.5">Deploy downlinks to active surface arrays to conduct synchronized orbital operations.</p>
+                    </div>
+                    <span class="font-data text-[10px] text-secondary border border-secondary/30 px-2 py-1 bg-secondary/5 rounded-sm">3 NODES CONNECTED</span>
+                </div>
+
+                <!-- 4. DYNAMIC GLOBAL MISSION SELECTOR (STATIONS BOARD) -->
+                <div class="flex-grow grid grid-cols-3 gap-6 overflow-y-auto pr-1">
+                    
+                    <!-- Station Card 1: Mauna Kea -->
+                    <div class="bg-surface-container border border-outline-variant hover:border-primary/40 flex flex-col p-4 rounded-sm justify-between transition-all duration-200 group relative">
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-start">
+                                <div class="p-1.5 bg-surface-container-lowest border border-outline-variant rounded-sm text-primary">
+                                    <span class="material-symbols-outlined text-xl">filter_drama</span>
+                                </div>
+                                <span class="flex items-center gap-1 font-data text-[9px] text-tertiary bg-tertiary/10 border border-tertiary/20 px-2 py-0.5 rounded-sm uppercase">
+                                    <span class="w-1 h-1 rounded-full bg-tertiary led-pulse"></span> ONLINE
+                                </span>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-md text-on-surface group-hover:text-primary transition-colors">MAUNA KEA SECTOR</h3>
+                                <span class="font-data text-[10px] text-on-surface-variant">MK-OBS-01 // HAWAII, USA</span>
+                                <p class="text-[12px] text-on-surface-variant mt-1">LGS adaptive optics & atmospheric cleansing loop.</p>
+                            </div>
+
+                            <!-- ACTIVE OBJECTIVE CARD -->
+                            <div class="bg-surface-container-lowest border border-outline-variant p-3 rounded-sm space-y-1.5 relative">
+                                <span class="text-[9px] font-data text-primary block uppercase font-bold tracking-wider">// ACTIVE STATION OBJECTIVE</span>
+                                <h4 id="mission-title-mauna_kea" class="font-bold text-[12px] text-on-surface leading-tight">Loading Mission...</h4>
+                                <p id="mission-desc-mauna_kea" class="text-[11px] text-on-surface-variant leading-relaxed">Retrieving coordinates...</p>
+                                <div class="flex justify-between items-center pt-1 border-t border-outline-variant/30">
+                                    <span id="mission-payout-mauna_kea" class="font-data text-[10px] text-tertiary font-bold">+0 CR // +0 SI</span>
+                                    <button onclick="stageMissionFromUI('mauna_kea')" class="px-2 py-0.5 bg-surface-container border border-outline-variant hover:border-tertiary/50 hover:bg-tertiary/5 text-[9px] font-data text-tertiary rounded-sm uppercase transition-colors">
+                                        ENGAGE
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="pt-3 border-t border-outline-variant/40 mt-3">
+                            <button onclick="triggerDeployment('mauna_kea_operations_split_view/code.html', 'MAUNA KEA OBSERVATORY', 'MK-OBS-01', 'mauna_kea')" class="w-full py-1.5 bg-primary hover:bg-primary-container text-surface text-center block font-data text-[11px] font-bold tracking-wider rounded-sm transition-colors uppercase">
+                                CONNECT TO VIEWPORT
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Station Card 2: Atacama Desert -->
+                    <div class="bg-surface-container border border-outline-variant hover:border-primary/40 flex flex-col p-4 rounded-sm justify-between transition-all duration-200 group relative">
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-start">
+                                <div class="p-1.5 bg-surface-container-lowest border border-outline-variant rounded-sm text-secondary">
+                                    <span class="material-symbols-outlined text-xl">analytics</span>
+                                </div>
+                                <span class="flex items-center gap-1 font-data text-[9px] text-tertiary bg-tertiary/10 border border-tertiary/20 px-2 py-0.5 rounded-sm uppercase">
+                                    <span class="w-1 h-1 rounded-full bg-tertiary led-pulse"></span> ONLINE
+                                </span>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-md text-on-surface group-hover:text-primary transition-colors">ATACAMA DESERT</h3>
+                                <span class="font-data text-[10px] text-on-surface-variant">ALMA-MAIN-04 // CHILE</span>
+                                <p class="text-[12px] text-on-surface-variant mt-1">Interferometry telemetry & radio wave sync pipeline.</p>
+                            </div>
+
+                            <!-- ACTIVE OBJECTIVE CARD -->
+                            <div class="bg-surface-container-lowest border border-outline-variant p-3 rounded-sm space-y-1.5 relative">
+                                <span class="text-[9px] font-data text-primary block uppercase font-bold tracking-wider">// ACTIVE STATION OBJECTIVE</span>
+                                <h4 id="mission-title-atacama" class="font-bold text-[12px] text-on-surface leading-tight">Loading Mission...</h4>
+                                <p id="mission-desc-atacama" class="text-[11px] text-on-surface-variant leading-relaxed">Retrieving coordinates...</p>
+                                <div class="flex justify-between items-center pt-1 border-t border-outline-variant/30">
+                                    <span id="mission-payout-atacama" class="font-data text-[10px] text-tertiary font-bold">+0 CR // +0 SI</span>
+                                    <button onclick="stageMissionFromUI('atacama')" class="px-2 py-0.5 bg-surface-container border border-outline-variant hover:border-tertiary/50 hover:bg-tertiary/5 text-[9px] font-data text-tertiary rounded-sm uppercase transition-colors">
+                                        ENGAGE
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="pt-3 border-t border-outline-variant/40 mt-3">
+                            <button onclick="triggerDeployment('atacama_desert_operations_split_view/code.html', 'ATACAMA TELESCOPE ARRAY', 'ALMA-MAIN-04', 'atacama')" class="w-full py-1.5 bg-primary hover:bg-primary-container text-surface text-center block font-data text-[11px] font-bold tracking-wider rounded-sm transition-colors uppercase">
+                                CONNECT TO VIEWPORT
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Station Card 3: Bosscha Observatory -->
+                    <div class="bg-surface-container border border-outline-variant hover:border-primary/40 flex flex-col p-4 rounded-sm justify-between transition-all duration-200 group relative">
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-start">
+                                <div class="p-1.5 bg-surface-container-lowest border border-outline-variant rounded-sm text-tertiary">
+                                    <span class="material-symbols-outlined text-xl">gavel</span>
+                                </div>
+                                <span class="flex items-center gap-1 font-data text-[9px] text-tertiary bg-tertiary/10 border border-tertiary/20 px-2 py-0.5 rounded-sm uppercase">
+                                    <span class="w-1 h-1 rounded-full bg-tertiary led-pulse"></span> ONLINE
+                                </span>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-md text-on-surface group-hover:text-primary transition-colors">BOSSCHA SECTOR</h3>
+                                <span class="font-data text-[10px] text-on-surface-variant">BOSSCHA-ZEISS-01 // INDONESIA</span>
+                                <p class="text-[12px] text-on-surface-variant mt-1">Deep-space exoplanet radar & transit analysis.</p>
+                            </div>
+
+                            <!-- ACTIVE OBJECTIVE CARD -->
+                            <div class="bg-surface-container-lowest border border-outline-variant p-3 rounded-sm space-y-1.5 relative">
+                                <span class="text-[9px] font-data text-primary block uppercase font-bold tracking-wider">// ACTIVE STATION OBJECTIVE</span>
+                                <h4 id="mission-title-bosscha" class="font-bold text-[12px] text-on-surface leading-tight">Loading Mission...</h4>
+                                <p id="mission-desc-bosscha" class="text-[11px] text-on-surface-variant leading-relaxed">Retrieving coordinates...</p>
+                                <div class="flex justify-between items-center pt-1 border-t border-outline-variant/30">
+                                    <span id="mission-payout-bosscha" class="font-data text-[10px] text-tertiary font-bold">+0 CR // +0 SI</span>
+                                    <button onclick="stageMissionFromUI('bosscha')" class="px-2 py-0.5 bg-surface-container border border-outline-variant hover:border-tertiary/50 hover:bg-tertiary/5 text-[9px] font-data text-tertiary rounded-sm uppercase transition-colors">
+                                        ENGAGE
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="pt-3 border-t border-outline-variant/40 mt-3">
+                            <button onclick="triggerDeployment('bosscha_observatory_operations_split_view/code.html', 'BOSSCHA OBSERVATORY', 'BOSSCHA-ZEISS-01', 'bosscha')" class="w-full py-1.5 bg-primary hover:bg-primary-container text-surface text-center block font-data text-[11px] font-bold tracking-wider rounded-sm transition-colors uppercase">
+                                CONNECT TO VIEWPORT
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+        </div>
+
+        <!-- 5. NASA TACTICAL UPGRADE TERMINAL -->
+        <section class="bg-surface-container border border-outline-variant p-4 rounded-sm shrink-0 z-10 terminal-glow flex flex-col gap-3">
+            <div class="flex justify-between items-center border-b border-outline-variant/50 pb-2">
+                <div>
+                    <h2 class="font-data text-[12px] font-bold tracking-widest text-primary uppercase">NASA TACTICAL UPGRADE TERMINAL // HARDWARE & ATTRIBUTE EXCHANGE</h2>
+                    <p class="text-[11px] text-on-surface-variant">Procure local hardware enhancements or invest science intelligence points into specialty systems.</p>
+                </div>
+                <div class="font-data text-[10px] text-on-surface-variant flex gap-4">
+                    <span>SYS_SECURITY: <span class="text-tertiary">ENABLED</span></span>
+                </div>
+            </div>
+
+            <!-- SYSTEM TECH ENHANCEMENTS (GameState meta modifiers) -->
+            <div class="space-y-2 border border-outline-variant/40 bg-surface-container-low p-3 rounded-sm">
+                <span class="font-data text-[10px] text-primary block uppercase font-bold tracking-wider">// SYSTEM TECH ENHANCEMENTS</span>
+                <p class="text-[10px] text-on-surface-variant leading-relaxed">Terminal hardware modifiers scale active enclosure loops. Purchases apply instantly without resetting staged missions.</p>
+                <div id="system-tech-upgrades-list" class="grid grid-cols-1 lg:grid-cols-3 gap-3"></div>
+            </div>
+
+            <!-- Shop Elements Split Layout -->
+            <div class="grid grid-cols-12 gap-6">
+                
+                <!-- Col 1: Hardware upgrades costing credits (CR) -->
+                <div class="col-span-7 space-y-2">
+                    <span class="font-data text-[10px] text-primary block uppercase font-bold tracking-wider">// HARDWARE TIER EXPANSIONS (CR PURCHASES)</span>
+                    <div class="grid grid-cols-3 gap-3">
+                        
+                        <!-- Mauna Kea Hardware -->
+                        <div class="bg-surface-container-low border border-outline-variant p-2.5 rounded-sm flex flex-col justify-between h-24">
+                            <div>
+                                <span class="font-data text-[9px] text-primary block uppercase font-bold">Mauna Kea LGS</span>
+                                <span id="shop-tier-mauna_kea" class="font-data text-[11px] text-on-surface block">TIER: -</span>
+                            </div>
+                            <button onclick="buyHardwareUpgrade('mauna_kea')" id="btn-upgrade-mauna_kea" class="w-full mt-1.5 py-1 bg-primary hover:bg-primary-container text-surface font-data text-[9px] font-bold rounded-sm uppercase transition-colors">
+                                UPGRADE: --- CR
+                            </button>
+                        </div>
+
+                        <!-- Atacama Array Hardware -->
+                        <div class="bg-surface-container-low border border-outline-variant p-2.5 rounded-sm flex flex-col justify-between h-24">
+                            <div>
+                                <span class="font-data text-[9px] text-secondary block uppercase font-bold">ALMA Correlator</span>
+                                <span id="shop-tier-atacama" class="font-data text-[11px] text-on-surface block">TIER: -</span>
+                            </div>
+                            <button onclick="buyHardwareUpgrade('atacama')" id="btn-upgrade-atacama" class="w-full mt-1.5 py-1 bg-primary hover:bg-primary-container text-surface font-data text-[9px] font-bold rounded-sm uppercase transition-colors">
+                                UPGRADE: --- CR
+                            </button>
+                        </div>
+
+                        <!-- Bosscha Hardware -->
+                        <div class="bg-surface-container-low border border-outline-variant p-2.5 rounded-sm flex flex-col justify-between h-24">
+                            <div>
+                                <span class="font-data text-[9px] text-tertiary block uppercase font-bold">Bosscha Radar</span>
+                                <span id="shop-tier-bosscha" class="font-data text-[11px] text-on-surface block">TIER: -</span>
+                            </div>
+                            <button onclick="buyHardwareUpgrade('bosscha')" id="btn-upgrade-bosscha" class="w-full mt-1.5 py-1 bg-primary hover:bg-primary-container text-surface font-data text-[9px] font-bold rounded-sm uppercase transition-colors">
+                                UPGRADE: --- CR
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Col 2: Companion Droids & Neural attributes boosters (CR / SI Purchases) -->
+                <div class="col-span-5 flex flex-col gap-2">
+                    <span class="font-data text-[10px] text-primary block uppercase font-bold tracking-wider">// SUPPORT droids & STAT BOOSTS</span>
+                    <div class="grid grid-cols-2 gap-3 flex-grow">
+                        
+                        <!-- Companion Droid -->
+                        <button onclick="buyCompanionDroid()" class="bg-surface-container-low border border-outline-variant hover:border-secondary/40 p-2 text-left rounded-sm flex flex-col justify-between hover:bg-surface-container-high transition-all">
+                            <div>
+                                <span class="font-data text-[9px] text-secondary block uppercase font-bold">COMPANION SUPPORT DROID</span>
+                                <span class="text-[10px] text-on-surface-variant block mt-0.5 leading-tight">Instantly adds companion droids, boosting Player IQ by +15.</span>
+                            </div>
+                            <span class="font-data text-[10px] text-secondary font-bold uppercase mt-1">COST: 150 CR</span>
+                        </button>
+
+                        <!-- Neural Booster -->
+                        <button onclick="buyNeuralBooster()" class="bg-surface-container-low border border-outline-variant hover:border-tertiary/40 p-2 text-left rounded-sm flex flex-col justify-between hover:bg-surface-container-high transition-all">
+                            <div>
+                                <span class="font-data text-[9px] text-tertiary block uppercase font-bold">NEURAL BRAIN INTEGRATOR</span>
+                                <span class="text-[10px] text-on-surface-variant block mt-0.5 leading-tight">Sync science points directly to IQ (+20) & Hub Health (+20).</span>
+                            </div>
+                            <span class="font-data text-[10px] text-tertiary font-bold uppercase mt-1">COST: 50 SI</span>
+                        </button>
+
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Terminal log for local purchase transactions feedback -->
+            <div class="bg-surface-container-lowest border border-outline-variant p-2.5 h-14 overflow-hidden rounded-sm font-data text-[10px] text-on-surface-variant/80 flex flex-col justify-end">
+                <div id="shop-log-line-1" class="text-tertiary">&gt; Initialize asset transaction feed... OK</div>
+                <div id="shop-log-line-2" class="opacity-70">&gt; Waiting for specialist purchase inputs...</div>
+            </div>
+        </section>
+    </main>
+
+    <!-- INLINE HANDSHAKE TRANSITION MODAL -->
+    <div id="deployment-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-surface-container-lowest/90 backdrop-blur-md p-6">
+        <div class="w-[500px] bg-surface-container border border-primary/40 p-6 rounded-sm space-y-6 terminal-glow relative">
+            
+            <div class="absolute top-2 left-2 font-data text-[9px] text-primary/40">[SYS_AUTH_MODE]</div>
+            <div class="absolute bottom-2 right-2 font-data text-[9px] text-primary/40">// COpS_v4.02</div>
+
+            <div class="space-y-1 text-center">
+                <span class="material-symbols-outlined text-primary text-4xl animate-pulse">security</span>
+                <h2 class="text-headline-md font-bold text-primary tracking-tight uppercase mt-2">HANDSHAKE SEQUENCE</h2>
+                <p class="font-data text-[11px] text-on-surface-variant">INITIALIZING SECURE REMOTE TUNNEL PORT</p>
+            </div>
+
+            <div class="bg-surface-container-lowest border border-outline-variant p-3 rounded-sm font-data text-[11px] space-y-1.5 text-on-surface-variant">
+                <div class="flex justify-between"><span class="opacity-60">TARGET_NODE:</span> <span class="text-on-surface font-bold" id="modal-target-name">---</span></div>
+                <div class="flex justify-between"><span class="opacity-60">NODE_UUID:</span> <span class="text-secondary" id="modal-target-id">---</span></div>
+                <div class="flex justify-between"><span class="opacity-60">HANDSHAKE_STATUS:</span> <span class="text-tertiary" id="modal-handshake-status">REQUESTING PACKETS...</span></div>
+            </div>
+
+            <div class="space-y-2">
+                <div class="flex justify-between font-data text-[10px] text-on-surface-variant">
+                    <span>BUFFERING QUANTUM STATE</span>
+                    <span id="progress-percent" class="text-primary">0%</span>
+                </div>
+                <div class="w-full h-3 bg-surface-container-low border border-outline-variant p-0.5 rounded-sm">
+                    <div id="progress-fill" class="h-full bg-primary rounded-sm" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <div class="bg-surface-container-lowest/70 border border-outline-variant/60 p-2.5 h-24 overflow-hidden rounded-sm font-data text-[10px] text-on-surface-variant/80 space-y-1">
+                <div id="log-line-1">&gt; Establishing tunnel network handshakes...</div>
+                <div id="log-line-2" class="opacity-0">&gt; Remote buffer allocated securely.</div>
+                <div id="log-line-3" class="opacity-0">&gt; Port multiplexer validation complete.</div>
+                <div id="log-line-4" class="opacity-0">&gt; Redirecting terminal command vectors...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 0% CRITICAL SAFETY BREACH HARD LOCK SCREEN -->
+    <div id="screen-lock-overlay" class="hidden fixed inset-0 bg-surface-container-lowest/98 backdrop-blur-xl z-[200] flex flex-col items-center justify-center p-6 text-center select-none animate-fade-in">
+        <div class="w-[500px] bg-surface-container border border-error/50 p-8 rounded-sm space-y-6 terminal-glow relative">
+            <div class="absolute top-2 left-2 font-data text-[9px] text-error/40">[SYS_EMERGENCY_LOCK]</div>
+            <div class="absolute bottom-2 right-2 font-data text-[9px] text-error/40">// COpS_FATAL_BREACH</div>
+
+            <span class="material-symbols-outlined text-error text-6xl animate-bounce">warning</span>
+            <h2 class="text-2xl font-headline font-bold text-error tracking-tight uppercase">SYSTEM LOCKOUT: BREACH COMPROMISE</h2>
+            <p class="font-data text-[12px] text-on-surface-variant leading-relaxed">
+                The global orbital safety rating has reached 0%. Spatial debris and telemetry interferences have overwhelmed the sector arrays. Ground Control communications are fully compromised.
+            </p>
+            
+            <div class="bg-error/10 border border-error/20 p-4 rounded-sm font-data text-[11px] text-error space-y-1 text-left">
+                <div>&gt; [ERROR] DIRECTORY COMMUNICATIONS DOWNLINK SEVERED</div>
+                <div>&gt; [FATAL] CORE VOLTAGE DROP detected in Zeiss telescope</div>
+                <div>&gt; [FATAL] Laser ionization threshold failed at Mauna Kea</div>
+            </div>
+
+            <button onclick="rebootSystemAndPurge()" class="w-full py-3 bg-error hover:bg-error/80 text-surface text-center font-data text-[12px] font-bold tracking-wider rounded-sm transition-all uppercase">
+                REBOOT SYSTEM AND PURGE COpS CORE
+            </button>
+        </div>
+    </div>
+
+    <footer class="h-8 bg-surface-container border-t border-outline-variant flex justify-between items-center px-6 shrink-0 z-50">
+        <span class="font-data text-[10px] text-on-surface-variant uppercase">GLOBAL ORBITAL COORDINATE GRID MANAGER</span>
+        <div class="flex gap-4 font-data text-[10px] text-on-surface-variant">
+            <span>VERSION 4.02 // PRODUCTION RUN</span>
+        </div>
+    </footer>
+
+    <script>
+
+
+        // -------------------------------------------------------------
+        // HIGH-FIDELITY INTERACTIVE CANVAS SPACE RADAR ENGINE
+        // -------------------------------------------------------------
+
+        let canvas, ctx;
+        let sweepAngle = 0;
+        let activeTarget = null;
+
+        // Pre-computed jagged offsets for tumbling asteroids and scrap
+        const hazardVertices = {
+            apophis: [
+                { r: 1.0, a: 0 },
+                { r: 0.6, a: Math.PI / 4 },
+                { r: 0.9, a: Math.PI / 2 },
+                { r: 0.5, a: 3 * Math.PI / 4 },
+                { r: 1.2, a: Math.PI },
+                { r: 0.7, a: 5 * Math.PI / 4 },
+                { r: 0.8, a: 3 * Math.PI / 2 },
+                { r: 0.4, a: 7 * Math.PI / 4 }
+            ],
+            envisat: [
+                { r: 0.8, a: 0 },
+                { r: 1.1, a: Math.PI / 5 },
+                { r: 0.5, a: 2 * Math.PI / 5 },
+                { r: 0.9, a: 4 * Math.PI / 5 },
+                { r: 0.6, a: Math.PI },
+                { r: 1.2, a: 6 * Math.PI / 5 },
+                { r: 0.4, a: 8 * Math.PI / 5 },
+                { r: 1.0, a: 9 * Math.PI / 5 }
+            ]
+        };
+
+        const trackedObjects = [
+            {
+                id: 'iss',
+                name: 'ISS (ZARYA)',
+                designation: 'ACTIVE SCIENTIFIC ASSET',
+                type: 'iss',
+                distance: 70, // Matches Mauna Kea range (60-80)
+                angle: 0,
+                speed: 0.003,
+                size: 13,
+                currentX: 0,
+                currentY: 0
+            },
+            {
+                id: 'hubble',
+                name: 'HST (HUBBLE)',
+                designation: 'ACTIVE SCIENTIFIC ASSET',
+                type: 'hubble',
+                distance: 50, // Matches Atacama range (40-60)
+                angle: 2.1,
+                speed: -0.004,
+                size: 11,
+                currentX: 0,
+                currentY: 0
+            },
+            {
+                id: 'starlink',
+                name: 'STARLINK-G4',
+                designation: 'CRITICAL CONSTELLATION',
+                type: 'starlink',
+                distance: 75, // Matches Mauna Kea range (60-80)
+                angle: 4.2,
+                speed: 0.005,
+                size: 10,
+                currentX: 0,
+                currentY: 0
+            },
+            {
+                id: 'apophis',
+                name: 'APOPHIS FRAGMENT',
+                designation: 'CRITICAL DEBRIS WAVE',
+                type: 'apophis',
+                distance: 95, // Matches Bosscha range (80-100)
+                angle: 1.0,
+                speed: 0.002,
+                size: 10,
+                currentX: 0,
+                currentY: 0
+            },
+            {
+                id: 'envisat',
+                name: 'ENVISAT DEBRIS',
+                designation: 'INDUSTRIAL SPATIAL SCRAP',
+                type: 'envisat',
+                distance: 55, // Matches Atacama range (40-60)
+                angle: 3.5,
+                speed: -0.0035,
+                size: 9,
+                currentX: 0,
+                currentY: 0
+            }
+        ];
+
+        function getIntersectingStation(distance) {
+            if (distance >= 60 && distance <= 80) {
+                return { name: "MAUNA KEA", terminal: "mauna_kea_operations_split_view/code.html" };
+            } else if (distance >= 40 && distance < 60) {
+                return { name: "ATACAMA DESERT", terminal: "atacama_desert_operations_split_view/code.html" };
+            } else if (distance > 80 && distance <= 100) {
+                return { name: "BOSSCHA OBSERVATORY", terminal: "bosscha_observatory_operations_split_view/code.html" };
+            }
+            return null;
+        }
+
+        // Draw ISS using pure mathematical path blueprints
+        function drawISS(ctx, x, y, size, angle) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(angle + Math.PI/2);
+            
+            // Prominent central pressurized backbone
+            ctx.beginPath();
+            ctx.moveTo(-size, 0);
+            ctx.lineTo(size, 0);
+            ctx.lineWidth = 1.8;
+            ctx.stroke();
+            
+            // 8 distinct pairs of rectangular parallel solar array wings
+            ctx.lineWidth = 1;
+            const wingSpacing = size / 4;
+            const wingLength = size * 0.65;
+            const wingWidth = size * 0.12;
+            
+            for (let i = -3; i <= 4; i++) {
+                if (i === 0) continue;
+                const wx = i * wingSpacing - (i > 0 ? wingSpacing / 2 : -wingSpacing / 2);
+                
+                // Left array wing
+                ctx.beginPath();
+                ctx.rect(wx - wingWidth/2, -wingLength, wingWidth, wingLength);
+                ctx.stroke();
+                
+                // Right array wing
+                ctx.beginPath();
+                ctx.rect(wx - wingWidth/2, 0, wingWidth, wingLength);
+                ctx.stroke();
+            }
+            ctx.restore();
+        }
+
+        // Draw Hubble Space Telescope with cylinder & aperture door
+        function drawHubble(ctx, x, y, size, angle) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(angle + Math.PI/4);
+            
+            // Smooth hollow cylinder tube
+            const cylWidth = size * 0.85;
+            const cylHeight = size * 0.45;
+            ctx.beginPath();
+            ctx.rect(-cylWidth/2, -cylHeight/2, cylWidth, cylHeight);
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+            
+            // Tilted open aperture door line at the upper lens tip
+            ctx.beginPath();
+            ctx.moveTo(cylWidth/2, -cylHeight/2);
+            ctx.lineTo(cylWidth/2 + size * 0.25, -cylHeight/2 - size * 0.2);
+            ctx.lineWidth = 1.2;
+            ctx.stroke();
+            
+            // Two narrow, long perpendicular solar panels from midsection
+            ctx.beginPath();
+            ctx.rect(-size * 0.08, -cylHeight/2 - size * 0.6, size * 0.16, size * 0.6);
+            ctx.rect(-size * 0.08, cylHeight/2, size * 0.16, size * 0.6);
+            ctx.lineWidth = 1;
+            ctx.stroke();
+            
+            ctx.restore();
+        }
+
+        // Draw Starlink Cluster with uniform panel dashes
+        function drawStarlinkCluster(ctx, x, y, size, angle) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(angle);
+            
+            const count = 4;
+            const spacing = size * 0.35;
+            const dashWidth = size * 0.22;
+            const dashHeight = size * 0.08;
+            
+            ctx.lineWidth = 1;
+            for (let i = 0; i < count; i++) {
+                const dx = (i - (count - 1) / 2) * spacing;
+                ctx.beginPath();
+                ctx.rect(dx - dashWidth/2, -dashHeight/2, dashWidth, dashHeight);
+                ctx.stroke();
+            }
+            ctx.restore();
+        }
+
+        // Draw Jagged tumbling hazard space debris (irregular sharp path)
+        function drawHazard(ctx, x, y, size, angle, type) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(angle * 2.8);
+            
+            const vertices = hazardVertices[type] || hazardVertices['apophis'];
+            ctx.beginPath();
+            vertices.forEach((v, idx) => {
+                const rx = Math.cos(v.a) * v.r * size * 0.85;
+                const ry = Math.sin(v.a) * v.r * size * 0.85;
+                if (idx === 0) {
+                    ctx.moveTo(rx, ry);
+                } else {
+                    ctx.lineTo(rx, ry);
+                }
+            });
+            ctx.closePath();
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        function initRadar() {
+            canvas = document.getElementById('spaceRadar');
+            if (!canvas) return;
+            ctx = canvas.getContext('2d');
+
+            // Interactive mouse click registration with scale-invariant hit test bounds
+            canvas.addEventListener('click', (e) => {
+                const rect = canvas.getBoundingClientRect();
+                const mouseX = (e.clientX - rect.left) * (canvas.width / rect.width);
+                const mouseY = (e.clientY - rect.top) * (canvas.height / rect.height);
+                
+                let clickedObj = null;
+                let minDistance = 15;
+                
+                trackedObjects.forEach(obj => {
+                    const dx = mouseX - obj.currentX;
+                    const dy = mouseY - obj.currentY;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < minDistance) {
+                        clickedObj = obj;
+                        minDistance = dist;
+                    }
+                });
+
+                if (clickedObj) {
+                    selectTrackedObject(clickedObj);
+                } else {
+                    deselectTrackedObject();
+                }
+            });
+
+            // Kick off optimized recursive requestAnimationFrame loop structure
+            requestAnimationFrame(renderRadar);
+        }
+
+        function selectTrackedObject(obj) {
+            activeTarget = obj;
+            
+            const telemetryDefault = document.getElementById('telemetry-default');
+            const telemetryDetails = document.getElementById('telemetry-details');
+            const nameField = document.getElementById('telemetry-name');
+            const designationField = document.getElementById('telemetry-designation');
+            const threatField = document.getElementById('telemetry-threat');
+            const altitudeField = document.getElementById('telemetry-altitude');
+            const warningBox = document.getElementById('telemetry-warning-box');
+            
+            if (telemetryDefault && telemetryDetails) {
+                telemetryDefault.classList.add('hidden');
+                telemetryDetails.classList.remove('hidden');
+                
+                nameField.innerText = obj.name;
+                designationField.innerText = obj.type === 'iss' || obj.type === 'hubble' ? 'SCIENTIFIC' : (obj.type === 'starlink' ? 'NETWORK' : 'HAZARD');
+                altitudeField.innerText = `${Math.floor(obj.distance * 35)} km`;
+                
+                // Threat rating based on distance
+                let threatClass = "LOW";
+                let threatColor = "text-tertiary";
+                if (obj.distance < 60) {
+                    threatClass = "CRITICAL";
+                    threatColor = "text-error";
+                } else if (obj.distance < 80) {
+                    threatClass = "MEDIUM";
+                    threatColor = "text-secondary";
+                }
+                threatField.innerText = threatClass;
+                threatField.className = `font-bold ${threatColor}`;
+
+                // Intersection prediction output warnings
+                const station = getIntersectingStation(obj.distance);
+                if (station) {
+                    warningBox.innerText = `PROJECTED INTERCEPT SECTOR DETECTED // DEPLOY TO ${station.name} TERMINAL TO NEUTRALIZE.`;
+                    warningBox.classList.remove('hidden');
+                } else {
+                    warningBox.classList.add('hidden');
+                }
+            }
+        }
+
+        function deselectTrackedObject() {
+            activeTarget = null;
+            const telemetryDefault = document.getElementById('telemetry-default');
+            const telemetryDetails = document.getElementById('telemetry-details');
+            if (telemetryDefault && telemetryDetails) {
+                telemetryDefault.classList.remove('hidden');
+                telemetryDetails.classList.add('hidden');
+            }
+        }
+
+        function renderRadar() {
+            if (!canvas || !ctx) return;
+
+            // Clean background canvas frame
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const cx = canvas.width / 2;
+            const cy = canvas.height / 2;
+            
+            // Query dynamic window GameState rating
+            const safety = window.GameState ? window.GameState.getSafetyRating() : 100;
+            
+            // Map state-dependent colors
+            let strokeColor = '#6feee1'; // Primary Cyan
+            let glowColor = 'rgba(111, 238, 225, 0.15)';
+            let isPulsing = false;
+            let isErratic = false;
+            
+            if (safety >= 80) {
+                strokeColor = '#6feee1'; // Calm Cyan
+                glowColor = 'rgba(111, 238, 225, 0.12)';
+            } else if (safety >= 10) {
+                strokeColor = '#ffb866'; // Pulsing warning amber
+                isPulsing = true;
+                const brightness = 0.6 + 0.4 * Math.sin(Date.now() / 200);
+                glowColor = `rgba(255, 184, 102, ${0.1 * brightness + 0.05})`;
+            } else {
+                strokeColor = '#ffb4ab'; // Erratic flashing red matrix
+                isErratic = true;
+                const flick = Math.random() > 0.18;
+                if (!flick) {
+                    strokeColor = 'rgba(255, 180, 171, 0.15)';
+                    glowColor = 'rgba(255, 180, 171, 0.02)';
+                } else {
+                    glowColor = 'rgba(255, 180, 171, 0.22)';
+                }
+            }
+
+            // Draw Concentric distance tracking rings
+            ctx.strokeStyle = strokeColor;
+            ctx.lineWidth = 1;
+            
+            // Central wireframe Earth Atmosphere Boundary
+            ctx.save();
+            ctx.strokeStyle = isErratic ? strokeColor : 'rgba(111, 238, 225, 0.25)';
+            ctx.beginPath();
+            ctx.arc(cx, cy, 30, 0, 2 * Math.PI);
+            ctx.stroke();
+            ctx.restore();
+
+            // Circular radar grid rings
+            const rings = [45, 70, 95];
+            rings.forEach(r => {
+                ctx.save();
+                ctx.strokeStyle = strokeColor;
+                ctx.globalAlpha = 0.18;
+                ctx.beginPath();
+                ctx.arc(cx, cy, r, 0, 2 * Math.PI);
+                ctx.stroke();
+                ctx.restore();
+            });
+
+            // Draw Station longitude sector coverage arcs (visual alignment helper)
+            ctx.save();
+            ctx.lineWidth = 2.5;
+            
+            // Mauna Kea Sector (Cyan Arc, radius 70)
+            ctx.strokeStyle = '#6feee1';
+            ctx.globalAlpha = 0.35;
+            ctx.beginPath();
+            ctx.arc(cx, cy, 70, 0.2, 1.8);
+            ctx.stroke();
+
+            // Atacama Sector (Amber Arc, radius 50)
+            ctx.strokeStyle = '#ffb866';
+            ctx.globalAlpha = 0.35;
+            ctx.beginPath();
+            ctx.arc(cx, cy, 50, 2.3, 3.9);
+            ctx.stroke();
+
+            // Bosscha Sector (Green Arc, radius 95)
+            ctx.strokeStyle = '#7ef0a7';
+            ctx.globalAlpha = 0.35;
+            ctx.beginPath();
+            ctx.arc(cx, cy, 95, 4.4, 6.0);
+            ctx.stroke();
+            ctx.restore();
+
+            // Cardinal Crosshairs
+            ctx.save();
+            ctx.strokeStyle = strokeColor;
+            ctx.globalAlpha = 0.12;
+            ctx.beginPath();
+            ctx.moveTo(cx - 105, cy);
+            ctx.lineTo(cx + 105, cy);
+            ctx.moveTo(cx, cy - 105);
+            ctx.lineTo(cx, cy + 105);
+            ctx.stroke();
+            ctx.restore();
+
+            // Central wireframe Earth globe
+            ctx.save();
+            ctx.strokeStyle = strokeColor;
+            ctx.shadowColor = strokeColor;
+            ctx.shadowBlur = isErratic ? 2 : 6;
+            ctx.beginPath();
+            ctx.arc(cx, cy, 20, 0, 2 * Math.PI);
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+            ctx.globalAlpha = 0.35;
+            ctx.beginPath();
+            ctx.ellipse(cx, cy, 10, 20, 0, 0, 2 * Math.PI);
+            ctx.ellipse(cx, cy, 20, 7, 0, 0, 2 * Math.PI);
+            ctx.stroke();
+            ctx.restore();
+
+            // Draw Neon Sweep beam line with fading trail
+            sweepAngle = (sweepAngle + 0.012) % (2 * Math.PI);
+            
+            // Sweep trail gradient steps
+            ctx.save();
+            const trailSteps = 24;
+            const trailArc = 0.55;
+            for (let i = 0; i < trailSteps; i++) {
+                const alpha = (1 - (i / trailSteps)) * 0.14;
+                const angle = sweepAngle - (i / trailSteps) * trailArc;
+                ctx.strokeStyle = strokeColor;
+                ctx.globalAlpha = alpha;
+                ctx.beginPath();
+                ctx.moveTo(cx, cy);
+                ctx.lineTo(cx + Math.cos(angle) * 110, cy + Math.sin(angle) * 110);
+                ctx.stroke();
+            }
+            ctx.restore();
+
+            // Neon beam stroke line
+            ctx.save();
+            ctx.strokeStyle = strokeColor;
+            ctx.lineWidth = 1.5;
+            ctx.shadowColor = strokeColor;
+            ctx.shadowBlur = isPulsing ? 5 + 4 * Math.sin(Date.now() / 150) : 5;
+            ctx.beginPath();
+            ctx.moveTo(cx, cy);
+            ctx.lineTo(cx + Math.cos(sweepAngle) * 110, cy + Math.sin(sweepAngle) * 110);
+            ctx.stroke();
+            ctx.restore();
+
+            // Future orbital trajectory predictions (dotted path line)
+            if (activeTarget) {
+                ctx.save();
+                ctx.strokeStyle = strokeColor;
+                ctx.globalAlpha = 0.45;
+                ctx.lineWidth = 1.2;
+                ctx.setLineDash([4, 4]);
+                ctx.beginPath();
+                ctx.arc(cx, cy, activeTarget.distance, 0, 2 * Math.PI);
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            // Draw tracked objects
+            trackedObjects.forEach(obj => {
+                // Circular Orbit mechanics
+                obj.angle += obj.speed;
+                obj.currentX = cx + Math.cos(obj.angle) * obj.distance;
+                obj.currentY = cy + Math.sin(obj.angle) * obj.distance;
+
+                ctx.save();
+                if (activeTarget && activeTarget.id === obj.id) {
+                    ctx.strokeStyle = strokeColor;
+                    ctx.lineWidth = 1;
+                    
+                    // Locked target brackets
+                    ctx.beginPath();
+                    const bSize = obj.size + 4;
+                    ctx.rect(obj.currentX - bSize, obj.currentY - bSize, bSize * 2, bSize * 2);
+                    ctx.stroke();
+                    
+                    ctx.shadowColor = strokeColor;
+                    ctx.shadowBlur = 5;
+                } else {
+                    ctx.strokeStyle = strokeColor;
+                    ctx.globalAlpha = 0.7;
+                }
+
+                // Render matching physical paths
+                if (obj.type === 'iss') {
+                    drawISS(ctx, obj.currentX, obj.currentY, obj.size, obj.angle);
+                } else if (obj.type === 'hubble') {
+                    drawHubble(ctx, obj.currentX, obj.currentY, obj.size, obj.angle);
+                } else if (obj.type === 'starlink') {
+                    drawStarlinkCluster(ctx, obj.currentX, obj.currentY, obj.size, obj.angle);
+                } else {
+                    drawHazard(ctx, obj.currentX, obj.currentY, obj.size, obj.angle, obj.type);
+                }
+                ctx.restore();
+            });
+
+            // Maintain stable requestAnimationFrame cycles
+            requestAnimationFrame(renderRadar);
+        }
+
+        // -------------------------------------------------------------
+        // STATE INTEGRATION AND BINDINGS
+        // -------------------------------------------------------------
+
+        function updateUI() {
+            if (!window.GameState || !window.PlayerProgression || !window.MissionEngine) return;
+
+            // 1. Fetch live currency values
+            const credits = window.GameState.getCredits();
+            const science = window.GameState.getScience();
+            const iq = window.GameState.getIQ();
+            const safety = window.GameState.getSafetyRating();
+
+            // 2. Fetch progression character stats
+            const stats = window.PlayerProgression.getCharacterStats();
+
+            // 3. Update top header values
+            document.getElementById('header-credits').innerText = credits;
+            document.getElementById('header-science').innerText = science;
+            document.getElementById('header-iq').innerText = iq;
+
+            // 4. Update manifest values
+            document.getElementById('manifest-level').innerText = `LVL ${stats.level}`;
+            document.getElementById('manifest-health').innerText = `${stats.maxHealth} HP`;
+            document.getElementById('manifest-defense').innerText = `${stats.defense} km`;
+            document.getElementById('manifest-credits').innerText = credits;
+            document.getElementById('manifest-science').innerText = science;
+            document.getElementById('manifest-iq').innerText = iq;
+
+            // Render matching level titles
+            const manifestTitle = document.getElementById('manifest-title');
+            if (stats.level >= 5) {
+                manifestTitle.innerText = "NASA FLIGHT COMMANDER";
+            } else if (stats.level >= 3) {
+                manifestTitle.innerText = "SENIOR ORBITAL ARCHITECT";
+            } else {
+                manifestTitle.innerText = "PRIORITY SPECIALIST";
+            }
+
+            // 5. Update Reactive Orbital Threat Grid Card
+            const threatCard = document.getElementById('threat-indicator-card');
+            const threatBadge = document.getElementById('threat-status-badge');
+            const threatPercentText = document.getElementById('threat-percent');
+            const threatBar = document.getElementById('threat-bar');
+            const headerSysStatus = document.getElementById('header-sys-status');
+
+            threatPercentText.innerText = `${Math.floor(safety)}%`;
+            threatBar.style.width = `${safety}%`;
+
+            // Reset dynamic styles
+            threatCard.className = "bg-surface-container p-3 rounded-sm space-y-3 transition-all duration-300 border ";
+            threatBadge.className = "font-data text-[9px] px-1.5 py-0.5 rounded-sm uppercase font-bold border ";
+            threatBar.className = "h-full rounded-sm transition-all duration-300 ";
+
+            if (safety >= 80) {
+                // Safe State: cyan
+                threatCard.classList.add('border-primary');
+                threatBadge.classList.add('text-primary', 'bg-primary/10', 'border-primary/20');
+                threatBadge.innerText = "NOMINAL";
+                threatPercentText.className = "font-data text-2xl font-bold text-primary";
+                threatBar.classList.add('bg-primary');
+                headerSysStatus.innerText = "NOMINAL";
+                headerSysStatus.className = "text-tertiary";
+            } else if (safety > 10) {
+                // Warning State: amber pulsing
+                threatCard.classList.add('border-secondary');
+                threatBadge.classList.add('text-secondary', 'bg-secondary/10', 'border-secondary/20', 'led-pulse');
+                threatBadge.innerText = "SECTOR DECAY";
+                threatPercentText.className = "font-data text-2xl font-bold text-secondary";
+                threatBar.classList.add('bg-secondary');
+                headerSysStatus.innerText = "THREAT WARNING";
+                headerSysStatus.className = "text-secondary led-pulse";
+            } else if (safety > 0) {
+                // Critical State: red flashing
+                threatCard.classList.add('border-error', 'emergency-active');
+                threatBadge.classList.add('text-error', 'bg-error/10', 'border-error/20');
+                threatBadge.innerText = "CRITICAL COMPROMISE";
+                threatPercentText.className = "font-data text-2xl font-bold text-error animate-pulse";
+                threatBar.classList.add('bg-error');
+                headerSysStatus.innerText = "EMERGENCY BREACH";
+                headerSysStatus.className = "text-error animate-pulse";
+            } else {
+                // 0% Hard Screen Lock simulation trigger
+                document.getElementById('screen-lock-overlay').classList.remove('hidden');
+                headerSysStatus.innerText = "SEVERED";
+                headerSysStatus.className = "text-error";
+            }
+
+            // 6. Render System Tech Enhancements storefront
+            renderSystemTechEnhancements();
+
+            // 7. Update Tactical Upgrade Shop values
+            const shop = window.PlayerProgression.getUpgradeShopMatrix();
+            for (const site in shop) {
+                const upgrade = shop[site];
+                const tierEl = document.getElementById(`shop-tier-${site}`);
+                const btnEl = document.getElementById(`btn-upgrade-${site}`);
+
+                if (tierEl && btnEl) {
+                    tierEl.innerText = upgrade.isMaxed ? "TIER: MAX (LVL 5)" : `TIER: LVL ${upgrade.currentTier}`;
+                    btnEl.innerText = upgrade.isMaxed ? "MAXED OUT" : `UPGRADE: ${upgrade.nextCost} CR`;
+                    
+                    if (upgrade.isMaxed) {
+                        btnEl.className = "w-full mt-1.5 py-1 bg-outline-variant text-on-surface-variant font-data text-[9px] font-bold rounded-sm uppercase cursor-not-allowed";
+                    } else {
+                        btnEl.className = "w-full mt-1.5 py-1 bg-primary hover:bg-primary-container text-surface font-data text-[9px] font-bold rounded-sm uppercase transition-colors";
+                    }
+                }
+            }
+
+            // 8. Update Active Missions display cards
+            const missions = window.MissionEngine.getMissions();
+            missions.forEach(mission => {
+                const titleEl = document.getElementById(`mission-title-${mission.site}`);
+                const descEl = document.getElementById(`mission-desc-${mission.site}`);
+                const payoutEl = document.getElementById(`mission-payout-${mission.site}`);
+
+                if (titleEl && descEl && payoutEl) {
+                    titleEl.innerText = mission.title;
+                    descEl.innerText = mission.description;
+                    payoutEl.innerText = `+${mission.rewardCredits} CR // +${mission.rewardScience} SI`;
+                }
+            });
+        }
+
+        // -------------------------------------------------------------
+        // SYSTEM TECH ENHANCEMENTS STOREFRONT
+        // -------------------------------------------------------------
+
+        const SYSTEM_TECH_UPGRADE_META = {
+            laser_width: {
+                label: 'LASER LENSES',
+                description: 'Expands Mauna Kea manual LGS beam collision radius for faster aerosol clearance.'
+            },
+            alignment_margin: {
+                label: 'PHASE CORRELATOR TOLERANCE',
+                description: 'Widens Atacama slider alignment sweet-spot so correlator tracking is more forgiving.'
+            },
+            log_speed: {
+                label: 'PHOTOMETER STREAM BUFFER',
+                description: 'Accelerates Bosscha transit packet logging intervals during minima capture.'
+            }
+        };
+
+        function renderSystemTechEnhancements() {
+            const container = document.getElementById('system-tech-upgrades-list');
+            if (!container || !window.GameState) return;
+
+            const upgrades = GameState.getUpgrades();
+            const credits = GameState.getCredits();
+            container.innerHTML = '';
+
+            Object.entries(upgrades).forEach(([upgradeId, upgrade]) => {
+                const meta = SYSTEM_TECH_UPGRADE_META[upgradeId] || {
+                    label: upgradeId.replace(/_/g, ' ').toUpperCase(),
+                    description: 'Hardware modifier for enclosure telemetry systems.'
+                };
+                const isMaxed = upgrade.level >= upgrade.max;
+                const canAfford = credits >= upgrade.cost;
+                const modifierVal = GameState.getUpgradeModifier(upgradeId);
+
+                const row = document.createElement('div');
+                row.className = 'bg-surface-container border border-outline-variant/60 p-3 rounded-sm flex flex-col gap-2';
+
+                const title = document.createElement('div');
+                title.className = 'font-data text-[11px] font-bold text-primary uppercase tracking-wide';
+                title.innerText = `${meta.label} [LVL ${upgrade.level}/${upgrade.max}]`;
+
+                const desc = document.createElement('div');
+                desc.className = 'font-data text-[10px] text-on-surface-variant leading-snug ps-1';
+                desc.style.opacity = '0.85';
+                desc.innerText = meta.description;
+
+                const modLine = document.createElement('div');
+                modLine.className = 'font-data text-[9px] text-tertiary/80 ps-1';
+                modLine.innerText = `ACTIVE MOD: ${modifierVal}${upgradeId === 'log_speed' ? 'ms' : upgradeId === 'alignment_margin' ? '' : 'px'}`;
+
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'w-full mt-1 py-1.5 font-data text-[10px] font-bold tracking-wider rounded-sm uppercase transition-colors';
+
+                if (isMaxed) {
+                    btn.innerText = '[ FULLY OPTIMIZED ]';
+                    btn.disabled = true;
+                    btn.className += ' bg-outline-variant/40 text-on-surface-variant cursor-not-allowed border border-outline-variant/30';
+                } else {
+                    btn.innerText = `[ ACQUIRE: ${upgrade.cost} CR ]`;
+                    if (canAfford) {
+                        btn.className += ' bg-primary hover:bg-primary-container text-surface border border-primary/40';
+                    } else {
+                        btn.className += ' bg-surface-container-low text-on-surface-variant border border-outline-variant/40 opacity-70';
+                    }
+                    btn.addEventListener('click', () => {
+                        const result = GameState.purchaseUpgrade(upgradeId);
+                        if (result.success) {
+                            logTransaction(`[ACQUIRED] ${meta.label} upgraded to LVL ${result.level}. Modifier: ${result.modifier}`, false);
+                        } else if (result.reason === 'insufficient_credits') {
+                            logTransaction(`[ERROR] INSUFFICIENT CR FOR ${meta.label}.`, true);
+                        } else if (result.reason === 'max_level') {
+                            logTransaction(`${meta.label} is fully optimized.`, true);
+                        } else {
+                            logTransaction(`[ERROR] Purchase failed for ${meta.label}.`, true);
+                        }
+                        renderSystemTechEnhancements();
+                        updateUI();
+                    });
+                }
+
+                row.appendChild(title);
+                row.appendChild(desc);
+                row.appendChild(modLine);
+                row.appendChild(btn);
+                container.appendChild(row);
+            });
+        }
+
+        function acquireSystemTechUpgrade(upgradeId) {
+            if (!window.GameState) return;
+            const result = GameState.purchaseUpgrade(upgradeId);
+            renderSystemTechEnhancements();
+            updateUI();
+            return result;
+        }
+
+        // -------------------------------------------------------------
+        // TRANSACTION HANDLERS AND HELPER INTERACTION LOGS
+        // -------------------------------------------------------------
+
+        function logTransaction(message, isError = false) {
+            const line1 = document.getElementById('shop-log-line-1');
+            const line2 = document.getElementById('shop-log-line-2');
+
+            if (line1 && line2) {
+                line1.innerText = line2.innerText;
+                line2.innerText = `> ${message}`;
+                
+                if (isError) {
+                    line2.className = "text-error animate-pulse";
+                } else {
+                    line2.className = "text-primary";
+                }
+            }
+        }
+
+        // Trigger dynamic upgrade purchases
+        function buyHardwareUpgrade(site) {
+            if (!window.PlayerProgression) return;
+            const matrix = window.PlayerProgression.getUpgradeShopMatrix()[site];
+            
+            if (matrix.isMaxed) {
+                logTransaction(`Upgrade for ${matrix.name} is already maxed out!`, true);
+                return;
+            }
+
+            const success = window.PlayerProgression.purchaseUpgrade(site);
+            if (success) {
+                logTransaction(`Approved: upgraded ${matrix.name} to tier ${matrix.currentTier + 1}.`, false);
+            } else {
+                logTransaction(`[ERROR] CREDITS INSUFFICIENT FOR ${matrix.name.toUpperCase()}!`, true);
+            }
+        }
+
+        // Spend Credits to buy a Companion Support Droid (CR 150)
+        function buyCompanionDroid() {
+            if (!window.GameState) return;
+            const cost = 150;
+            if (window.GameState.deductCredits(cost)) {
+                window.GameState.addIQ(15);
+                logTransaction(`[TRANSACTION] Acquired Support Droid (CR -150). Specialist IQ boosted by +15.`, false);
+            } else {
+                logTransaction(`[ERROR] CREDITS INSUFFICIENT FOR COMPANION SUPPORT DROID!`, true);
+            }
+        }
+
+        // Spend Science points to buy a Neural Brain Integrator (SI 50)
+        function buyNeuralBooster() {
+            if (!window.GameState || !window.PlayerProgression) return;
+            const cost = 50;
+            const currentSI = window.GameState.getScience();
+            
+            if (currentSI >= cost) {
+                // Deduct via direct handler
+                window.GameState.deductScience(cost);
+                window.GameState.addIQ(20);
+                
+                // Triggers manual stats rebuild and notifies listeners
+                window.PlayerProgression.recalculateCharacterStats();
+                window.GameState.save(); // Force save to sync views
+
+                logTransaction(`[TRANSACTION] Synced Neural Integrator (SI -50). Specialist IQ boosted by +20.`, false);
+            } else {
+                logTransaction(`[ERROR] SCIENCE INSUFFICIENT FOR NEURAL BRAIN INTEGRATOR!`, true);
+            }
+        }
+
+        // Stage a mission from the dashboard Selector UI
+        function stageMissionFromUI(site) {
+            if (!window.MissionEngine) return;
+            const missions = window.MissionEngine.getMissions();
+            const mission = missions.find(m => m.site === site);
+
+            if (mission) {
+                const payload = window.MissionEngine.stageMission(mission.id);
+                if (payload) {
+                    logTransaction(`[STAGED] Mission Staged: Ready for viewport deployment`, false);
+                }
+            }
+        }
+
+        // Emergency Lock screen reboot routine
+        function rebootSystemAndPurge() {
+            if (window.GameState) {
+                window.GameState.reset();
+                localStorage.removeItem('cosmic_ops_enclosure_upgrades');
+                localStorage.removeItem('cosmic_ops_active_missions');
+                localStorage.removeItem('active_mission_payload');
+                localStorage.removeItem('cosmic_ops_completed_missions');
+                window.location.reload();
+            }
+        }
+
+        // Staggered interactive transition driving handshakes to remote viewports (Staged Transaction Pattern)
+        function triggerDeployment(targetUrl, targetName, targetId, siteKey) {
+            if (!window.MissionEngine) return;
+            
+            // Check if there is an active staged mission matching this site
+            let payload = null;
+            try {
+                const serialized = localStorage.getItem('active_mission_payload');
+                if (serialized) {
+                    const parsed = JSON.parse(serialized);
+                    if (parsed.stationId === siteKey) {
+                        payload = parsed;
+                    }
+                }
+            } catch (e) {
+                console.error("Failed to parse active mission payload", e);
+            }
+
+            // Auto-stage if none exists
+            if (!payload) {
+                const activeMissions = window.MissionEngine.getMissions();
+                const activeMission = activeMissions.find(m => m.site === siteKey);
+                if (activeMission) {
+                    payload = window.MissionEngine.stageMission(activeMission.id);
+                }
+            }
+
+            const modal = document.getElementById('deployment-modal');
+            const nameField = document.getElementById('modal-target-name');
+            const idField = document.getElementById('modal-target-id');
+            const statusField = document.getElementById('modal-handshake-status');
+            const fill = document.getElementById('progress-fill');
+            const percentText = document.getElementById('progress-percent');
+            
+            nameField.innerText = targetName;
+            idField.innerText = targetId;
+            statusField.innerText = "AUTHENTICATING TELEMETRY...";
+            
+            modal.classList.remove('hidden');
+            
+            // Staggered terminal logging elements
+            const l1 = document.getElementById('log-line-1');
+            const l2 = document.getElementById('log-line-2');
+            const l3 = document.getElementById('log-line-3');
+            const l4 = document.getElementById('log-line-4');
+
+            // Populate logging triggers directly from active_mission_payload
+            l1.innerText = `> [CONNECT] Initializing secure tunnel port to ${targetId}...`;
+            l2.innerText = `> HANDSHAKE SUCCESSFUL // CORE ROUTER ASSIGNED TO TARGET: [${payload ? payload.objectiveText : 'SYSTEM SCAN'}]`;
+            l3.innerText = `> COORDINATE CHANNELS DETECTED // TARGETING: ${targetName}`;
+            l4.innerText = `> [REDIRECT] Loading downstream viewport frames...`;
+
+            l2.classList.add('opacity-0');
+            l3.classList.add('opacity-0');
+            l4.classList.add('opacity-0');
+
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += Math.floor(Math.random() * 8) + 5;
+                if (progress >= 100) {
+                    progress = 100;
+                    clearInterval(interval);
+                    statusField.innerText = "SECURE HANDSHAKE ESTABLISHED. ROUTING...";
+                    
+                    // Note: No immediate reward disbursement here anymore.
+                    // The downstream viewport page will execute GameState.completeActiveMission() upon arrival.
+
+                    setTimeout(() => {
+                        window.location.href = targetUrl;
+                    }, 2000);
+                }
+                
+                fill.style.width = progress + '%';
+                percentText.innerText = progress + '%';
+
+                if (progress > 25) l2.classList.remove('opacity-0');
+                if (progress > 55) l3.classList.remove('opacity-0');
+                if (progress > 85) {
+                    l4.classList.remove('opacity-0');
+                    statusField.innerText = "AUTHENTICATION VERIFIED...";
+                }
+            }, 80);
+        }
+
+        // Close modal function
+        function closeDeploymentModal() {
+            const modal = document.getElementById('deployment-modal');
+            if (modal) {
+                modal.classList.add('hidden');
+            }
+        }
+
+        /// -------------------------------------------------------------
+        // EVENT INITIALIZATION & TRIGGERS WITH SPECIALIST CALLSIGN
+        // -------------------------------------------------------------
+
+        // -------------------------------------------------------------
+        // EVENT INITIALIZATION & TRIGGERS
+        // -------------------------------------------------------------
+
+        window.addEventListener('load', () => {
+            // 1. Force the correct username tracking key
+            const activeUsername = localStorage.getItem('cosmic_username') || localStorage.getItem('cosmic_user_name') || "PRIORITY SPECIALIST";
+            const profileBadge = document.getElementById('manifest-title'); 
+            if (profileBadge) {
+                profileBadge.innerText = activeUsername.toUpperCase();
+            }
+
+            // 2. Fallback baseline generator using BOTH spelling keys so your metrics load seamlessly
+            const fallbackState = JSON.stringify({
+                credits: 500,
+                scienceIntelligence: 100,
+                playerIQ: 100,
+                safetyRating: 100
+            });
+
+            if (!localStorage.getItem('cosmic-ops-game-state') && !localStorage.getItem('cosmic_ops_game_state')) {
+                localStorage.setItem('cosmic-ops-game-state', fallbackState);
+                localStorage.setItem('cosmic_ops_game_state', fallbackState);
+            } else if (localStorage.getItem('cosmic_ops_game_state') && !localStorage.getItem('cosmic-ops-game-state')) {
+                // If the game saved under the underscore key, copy it to the hyphenated key
+                localStorage.setItem('cosmic-ops-game-state', localStorage.getItem('cosmic_ops_game_state'));
+            } else if (localStorage.getItem('cosmic-ops-game-state') && !localStorage.getItem('cosmic_ops_game_state')) {
+                // Vice versa
+                localStorage.setItem('cosmic_ops_game_state', localStorage.getItem('cosmic-ops-game-state'));
+            }
+
+            updateUI();
+            initRadar();
+
+            // Attach dynamic game loop updates to notify index elements on any logic updates
+            window.addEventListener('cosmic-ops-state-updated', updateUI);
+            window.addEventListener('cosmic-ops-upgrades-updated', updateUI);
+            window.addEventListener('cosmic-ops-missions-updated', updateUI);
+            window.addEventListener('cosmic-ops-progression-updated', updateUI);
+        });
+    </script>
+</body>
+</html>
