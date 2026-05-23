@@ -155,96 +155,28 @@
             <span class="font-data text-[11px] text-on-surface-variant tracking-wider uppercase">SECTOR: MAUNA KEA HAWAII // CORE DISPATCH</span>
         </div>
         <div class="flex items-center gap-4 font-data text-[11px] text-on-surface-variant">
-            <span id="lgs-status">SYS_INDICATOR: <span class="text-tertiary">ONLINE</span></span>
+            <span id="lgs-status"></span>
         </div>
     </nav>
 
     <main class="flex-grow flex overflow-hidden">
         <!-- Sidebar Navigation (Active mission panel at top) -->
-        <aside class="w-96 flex-shrink-0 border-r border-outline-variant bg-surface-container-low overflow-y-auto p-4 space-y-gutter flex flex-col gap-4">
+        <aside class="w-96 flex-shrink-0 border-r border-outline-variant bg-surface-container-low overflow-y-auto p-4 flex flex-col gap-4">
             
-            <!-- DYNAMIC ACTIVE MISSION COMPACT LOG -->
-            <section id="active-mission-section" class="bg-surface-container border border-primary/40 p-panel-padding rounded-sm relative shadow-lg">
-                <div class="absolute top-1 right-2 font-data text-[8px] text-primary animate-pulse">// ACTIVE CONTRACT</div>
-                <div class="bg-primary/10 border border-primary/20 px-2.5 py-1 mb-2.5">
-                    <h2 class="text-label-caps font-label-caps text-primary tracking-wider uppercase">ACTIVE HUB MISSION</h2>
-                </div>
-                <div class="space-y-2">
-                    <h3 id="sidebar-mission-title" class="font-bold text-[12.5px] text-on-surface leading-tight">Loading staged mission...</h3>
-                    <p id="sidebar-mission-desc" class="text-[11px] text-on-surface-variant leading-relaxed">Verifying secure communications channel...</p>
-                    <div class="flex justify-between items-center pt-2 border-t border-outline-variant/30 font-data text-[10px]">
-                        <span class="opacity-70">CONTRACT VALUE:</span>
-                        <span id="sidebar-mission-rewards" class="text-tertiary font-bold active-contract-value">--- CR // --- SI</span>
-                    </div>
-                    <div class="objective-box" style="margin-top: 15px; border-top: 1px dashed rgba(0, 243, 255, 0.2); padding-top: 10px;">
-                        <span class="label" style="color: #00f3ff; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: bold; letter-spacing: 1px;">// MISSION OBJECTIVES</span>
-                        <ul id="mauna-kea-checklist" style="list-style: none; padding: 0; margin: 8px 0;"></ul>
-                    </div>
+            <!-- Section 1: Raw Currency Reward Readout -->
+            <section class="bg-surface-container border border-outline-variant p-panel-padding rounded-sm relative shadow-md">
+                <div class="text-center py-2">
+                    <span id="sidebar-mission-rewards" class="text-tertiary font-bold text-base tracking-wider font-data active-contract-value">--- CR // --- SI</span>
                 </div>
             </section>
 
-            <!-- Station Profile Specs -->
-            <section class="bg-surface-container border border-outline-variant p-panel-padding rounded-sm">
-                <div class="bg-outline-variant/30 px-2 py-1 mb-3">
-                    <h2 class="text-label-caps font-label-caps text-on-surface">STATION: MK-OBS-01</h2>
+            <!-- Section 2: Interactive Objectives Checklist -->
+            <section class="bg-surface-container border border-outline-variant p-panel-padding rounded-sm flex-grow flex flex-col">
+                <div class="border-b border-outline-variant/30 pb-2 mb-3">
+                    <h2 class="text-label-caps font-label-caps text-primary tracking-wider uppercase">// MISSION OBJECTIVES</h2>
                 </div>
-                <div class="space-y-1">
-                    <div class="flex justify-between items-center zebra-row py-1">
-                        <span class="text-label-caps font-label-caps text-on-surface-variant">TEMP</span>
-                        <span class="text-data-sm font-data-sm text-tertiary">-12.4°C</span>
-                    </div>
-                    <div class="flex justify-between items-center zebra-row py-1">
-                        <span class="text-label-caps font-label-caps text-on-surface-variant">ALTITUDE</span>
-                        <span class="text-data-sm font-data-sm text-on-surface">4,207M</span>
-                    </div>
-                    <div class="flex justify-between items-center zebra-row py-1">
-                        <span class="text-label-caps font-label-caps text-on-surface-variant">PRESSURE</span>
-                        <span class="text-data-sm font-data-sm text-on-surface">608 hPa</span>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Laser Priming Panel -->
-            <section class="bg-surface-container border border-outline-variant p-panel-padding rounded-sm">
-                <div class="flex justify-between items-center mb-3">
-                    <h2 class="text-label-caps font-label-caps text-on-surface">ADAPTIVE OPTICS LGS</h2>
-                    <button class="px-2.5 py-1 border border-primary text-[10px] font-label-caps text-primary hover:bg-primary hover:text-surface transition-colors rounded-sm uppercase font-bold" id="lgs-toggle">
-                        LASER PRIPED
-                    </button>
-                </div>
-                <div class="p-2 border border-outline-variant bg-surface-container-lowest flex items-center justify-between">
-                    <span class="text-label-caps font-label-caps text-on-surface-variant">STATUS: <span id="sidebar-lgs-status" class="text-primary adaptive-optics-status-text">CHARGED</span></span>
-                    <span class="material-symbols-outlined text-primary text-sm led-pulse">gps_fixed</span>
-                </div>
-            </section>
-
-            <!-- Active Waveform Shifting -->
-            <section class="bg-surface-container border border-outline-variant p-panel-padding rounded-sm">
-                <div class="flex justify-between items-center mb-1">
-                    <h2 class="text-label-caps font-label-caps text-on-surface">WAVEFRONT ERROR (RMS)</h2>
-                    <span class="text-data-lg font-data-lg text-primary"><span id="seeing-val">0.450</span>"</span>
-                </div>
-                <div class="waveform-container bg-surface-container-lowest border border-outline-variant rounded-sm">
-                    <svg class="waveform-svg">
-                        <path id="waveform-path" d="M 0 40 L 400 40" fill="none" stroke="#6feee1" stroke-width="1.5"></path>
-                    </svg>
-                </div>
-            </section>
-
-            <!-- Helium Cryostat Monitoring -->
-            <section class="bg-surface-container border border-outline-variant p-panel-padding rounded-sm flex-grow">
-                <div class="flex justify-between items-center mb-3">
-                    <h2 class="text-label-caps font-label-caps text-on-surface">HELIUM CRYOSTAT</h2>
-                    <span class="material-symbols-outlined text-tertiary text-sm" data-icon="ac_unit">ac_unit</span>
-                </div>
-                <div class="space-y-2">
-                    <div class="flex justify-between items-end">
-                        <span class="text-label-caps font-label-caps text-on-surface-variant">CORE TEMP</span>
-                        <span class="text-data-lg font-data-lg text-tertiary">77.42K</span>
-                    </div>
-                    <div class="h-1 bg-outline-variant overflow-hidden">
-                        <div class="h-full bg-tertiary" style="width: 94%;"></div>
-                    </div>
+                <div class="flex-grow overflow-y-auto">
+                    <ul id="mauna-kea-checklist" class="font-data space-y-2"></ul>
                 </div>
             </section>
         </aside>
@@ -254,8 +186,8 @@
             <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(111,238,225,0.02)_0%,transparent_80%)] pointer-events-none"></div>
 
             <!-- Interactive Canvas Responsive Wrapper -->
-            <div class="w-full h-full flex items-center justify-center p-2">
-                <canvas id="sweeperCanvas" class="cursor-crosshair bg-surface-container-lowest/80" style="z-index: 10; pointer-events: auto;"></canvas>
+            <div class="w-full h-full flex items-center justify-center">
+                <canvas id="sweeperCanvas" class="cursor-crosshair" style="z-index: 10; pointer-events: auto;"></canvas>
             </div>
 
             <!-- Complete Transmit Overlay (Hidden initially) -->
@@ -356,7 +288,7 @@
             if (missionTitle) missionTitle.innerText = (activeMission.objectiveText || activeMission.title || "Mauna Kea Operations").toUpperCase();
             if (missionDesc) missionDesc.innerText = activeMission.description || "Target coordinates locked. Conduct manual cleaning parameters across all elevation profiles to clear orbital debris and air soot.";
 
-            // 2. DYNAMIC MULTI-STAGE CHECKLIST RENDERING ENGINE
+            // 2. DYNAMIC MULTI-STAGE CHECKLIST RENDERING ENGINE (Stacked Alignment Layout)
             function renderMaunaKeaChecklist() {
                 const checklist = document.getElementById("mauna-kea-checklist");
                 if (!checklist) return;
@@ -364,19 +296,38 @@
                 
                 activeMission.objectives.forEach(obj => {
                     const li = document.createElement("li");
-                    li.style.fontFamily = "'JetBrains Mono', monospace";
-                    li.style.fontSize = "11px";
-                    li.style.margin = "8px 0";
+                    li.className = "mb-3 flex flex-col";
                     
+                    let displayName = obj.text || "";
+                    displayName = displayName.replace(/\s*\(\d+\/\d+\)$/, '');
+                    
+                    let currentCount = typeof obj.count === 'number' ? obj.count : (obj.isCompleted ? 15 : 0);
+                    let targetCount = typeof obj.target === 'number' ? obj.target : 15;
+                    displayName = `${displayName} (${currentCount}/${targetCount})`;
+                    
+                    // Line 1: Checkbox & Title (bold monospace)
+                    const titleLine = document.createElement("div");
+                    titleLine.className = "font-data font-bold text-[11px]";
                     if (obj.isCompleted) {
-                        li.style.color = "#00ff66";
-                        li.style.textDecoration = "line-through";
-                        li.innerText = `[X] ${obj.text}`;
+                        titleLine.style.color = "#00ff66";
+                        titleLine.style.textDecoration = "line-through";
+                        titleLine.innerText = `[X] ${displayName}`;
                     } else {
-                        li.style.color = "#00f3ff";
-                        li.style.textDecoration = "none";
-                        li.innerText = `[ ] ${obj.text}`;
+                        titleLine.style.color = "#00f3ff";
+                        titleLine.style.textDecoration = "none";
+                        titleLine.innerText = `[ ] ${displayName}`;
                     }
+                    li.appendChild(titleLine);
+                    
+                    // Line 2: Sub-text Description (smaller text-[10px], muted opacity, left indent)
+                    const descLine = document.createElement("div");
+                    descLine.className = "font-data ps-4 text-[10px]";
+                    descLine.style.color = "rgba(0, 243, 255, 0.6)";
+                    descLine.style.lineHeight = "1.3";
+                    descLine.style.marginTop = "2px";
+                    descLine.innerText = obj.description || "";
+                    li.appendChild(descLine);
+                    
                     checklist.appendChild(li);
                 });
             }
@@ -399,17 +350,11 @@
                     purityBar.style.width = `${percentage}%`;
                 }
 
-                // When purity hits exactly 100%, render the deployment button
+                // When purity hits exactly 100%, render the deployment button in the empty top-right header slot
                 if (percentage === 100) {
-                    const sidebarStatus = document.getElementById("sidebar-lgs-status");
-                    if (sidebarStatus) {
-                        sidebarStatus.innerText = "COMPLETED";
-                        sidebarStatus.className = "text-emerald-400 font-bold";
-                    }
-
                     const lgsStatus = document.getElementById("lgs-status");
                     if (lgsStatus) {
-                        lgsStatus.outerHTML = `<button id="btn-complete-mission" class="bg-emerald-500 text-slate-950 font-mono font-bold text-xs px-3 py-1 rounded-sm border border-emerald-400 cursor-pointer">[ DEPLOY ORBITAL DATA UPLINK ]</button>`;
+                        lgsStatus.innerHTML = `<button id="btn-complete-mission" class="bg-emerald-500 text-slate-950 font-mono font-bold text-xs px-3 py-1 rounded-sm border border-emerald-400 cursor-pointer">[ DEPLOY ORBITAL DATA UPLINK ]</button>`;
                         
                         // Click listener to complete mission and route back
                         const btn = document.getElementById("btn-complete-mission");
@@ -422,56 +367,15 @@
                 }
             }
 
-            // 4. WAVEFRONT SHIFTING SIMULATION (from legacy sidebar code)
-            const path = document.getElementById('waveform-path');
-            let points = [];
-            for (let i = 0; i <= 40; i++) {
-                points.push(40 + Math.random() * 5);
-            }
-
-            function updateWaveform() {
-                points.shift();
-                points.push(40 + Math.random() * 5);
-                
-                let d = "M 0 " + points[0];
-                for (let i = 0; i < points.length; i++) {
-                    d += ` L ${i*10} ${points[i]}`;
-                }
-                if (path) path.setAttribute('d', d);
-                
-                const seeing = (0.38 + Math.random() * 0.04).toFixed(3);
-                const seeingEl = document.getElementById('seeing-val');
-                if (seeingEl) seeingEl.innerText = seeing;
-                
-                setTimeout(updateWaveform, 150);
-            }
-            updateWaveform();
-
-            // 5. LGS ARM / DISARM TOGGLE
-            const lgsBtn = document.getElementById('lgs-toggle');
-            const lgsStatus = document.getElementById('sidebar-lgs-status');
             let lgsArmed = true;
 
-            if (lgsBtn && lgsStatus) {
-                lgsBtn.addEventListener('click', () => {
-                    // Only toggle if not yet 100% complete
-                    const completed = activeMission.objectives.filter(o => o.isCompleted).length;
-                    const total = activeMission.objectives.length;
-                    if (completed === total) return;
-
-                    lgsArmed = !lgsArmed;
-                    if (lgsArmed) {
-                        lgsStatus.innerText = 'CHARGED';
-                        lgsStatus.className = 'text-primary adaptive-optics-status-text';
-                        lgsBtn.classList.remove('bg-outline-variant', 'text-on-surface-variant');
-                        lgsBtn.classList.add('border-primary', 'text-primary');
-                    } else {
-                        lgsStatus.innerText = 'DISARMED';
-                        lgsStatus.className = 'text-on-surface-variant adaptive-optics-status-text';
-                        lgsBtn.classList.remove('border-primary', 'text-primary');
-                        lgsBtn.classList.add('bg-outline-variant', 'text-on-surface-variant');
-                    }
-                });
+            function getLaserHitPadding() {
+                if (window.GameState && typeof GameState.getUpgradeModifier === 'function') {
+                    const mod = GameState.getUpgradeModifier('laser_width');
+                    if (typeof mod === 'number') return mod;
+                }
+                const level = 1;
+                return 8 + (level * 4);
             }
 
             // 6. CANVAS SETUP
@@ -480,9 +384,9 @@
             const ctx = canvas.getContext('2d');
 
             // Initialize canvas dimensions dynamically to fill the parent wrapper
-            if (canvas.parentElement && canvas.parentElement.clientWidth > 16 && canvas.parentElement.clientHeight > 16) {
-                canvas.width = canvas.parentElement.clientWidth - 16;
-                canvas.height = canvas.parentElement.clientHeight - 16;
+            if (canvas.parentElement && canvas.parentElement.clientWidth > 0 && canvas.parentElement.clientHeight > 0) {
+                canvas.width = canvas.parentElement.clientWidth;
+                canvas.height = canvas.parentElement.clientHeight;
             } else {
                 canvas.width = 550;
                 canvas.height = 400;
@@ -492,6 +396,8 @@
             let sparks = [];
             let laserLine = null;
             let laserTimer = 0;
+            const LASER_DURATION = 10;
+            let screenShakeFrames = 0;
 
             function createParticle() {
                 const w = canvas.width > 0 ? canvas.width : 550;
@@ -548,7 +454,8 @@
                 const clickY = (e.clientY - rect.top) * (canvas.height / rect.height);
 
                 laserLine = { targetX: clickX, targetY: clickY };
-                laserTimer = 10;
+                laserTimer = LASER_DURATION;
+                screenShakeFrames = 3;
 
                 const statusText = document.querySelector('.adaptive-optics-status-text');
                 if (statusText && completed < total && !statusText.querySelector('button')) {
@@ -568,8 +475,8 @@
             function animate() {
                 // Incorporate Dynamic Resizing within Animation Tracking Loop
                 if (canvas.parentElement) {
-                    const targetWidth = canvas.parentElement.clientWidth - 16;
-                    const targetHeight = canvas.parentElement.clientHeight - 16;
+                    const targetWidth = canvas.parentElement.clientWidth;
+                    const targetHeight = canvas.parentElement.clientHeight;
                     if (targetWidth > 0 && targetHeight > 0 && (canvas.width !== targetWidth || canvas.height !== targetHeight)) {
                         canvas.width = targetWidth;
                         canvas.height = targetHeight;
@@ -585,6 +492,16 @@
                 }
 
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                ctx.save();
+                if (screenShakeFrames > 0) {
+                    const shakeMag = screenShakeFrames * 1.25;
+                    ctx.translate(
+                        (Math.random() - 0.5) * shakeMag * 2,
+                        (Math.random() - 0.5) * shakeMag * 2
+                    );
+                    screenShakeFrames--;
+                }
 
                 // --- DRAW ALTITUDE SECTORS WITH GRADIENTS ---
                 // A. LEO Orbit (Top Third: y < 140px, Altitude > 260px)
@@ -674,7 +591,8 @@
                         const denominator = Math.sqrt((beamY2 - beamY1) ** 2 + (beamX2 - beamX1) ** 2);
                         const distance = denominator > 0 ? numerator / denominator : 999;
 
-                        if (distance < p.radius + 8 && p.y >= Math.min(beamY1, beamY2) && p.y <= Math.max(beamY1, beamY2)) {
+                        const laserHitPadding = getLaserHitPadding();
+                        if (distance < p.radius + laserHitPadding && p.y >= Math.min(beamY1, beamY2) && p.y <= Math.max(beamY1, beamY2)) {
                             
                             let targetId;
                             if (p.y < 140) {
@@ -689,19 +607,36 @@
 
                             const activeObj = activeMission.objectives.find(o => o.id === targetId || o.id === counterpartId);
                             if (activeObj && !activeObj.isCompleted) {
-                                if (window.GameState) {
-                                    const claimed = GameState.claimMilestone(activeObj.id);
-                                    if (claimed) {
-                                        const updatedPayload = localStorage.getItem('active_mission_payload');
-                                        if (updatedPayload) {
-                                            activeMission = JSON.parse(updatedPayload);
+                                // Initialize count and target if not present
+                                if (typeof activeObj.count !== 'number') activeObj.count = 0;
+                                if (typeof activeObj.target !== 'number') activeObj.target = 15;
+
+                                activeObj.count += 1;
+
+                                if (activeObj.count >= activeObj.target) {
+                                    activeObj.count = activeObj.target;
+                                    // Set isCompleted = false in localStorage before claimMilestone evaluates it
+                                    activeObj.isCompleted = false;
+                                    localStorage.setItem('active_mission_payload', JSON.stringify(activeMission));
+
+                                    if (window.GameState) {
+                                        const claimed = GameState.claimMilestone(activeObj.id);
+                                        if (claimed) {
+                                            const updatedPayload = localStorage.getItem('active_mission_payload');
+                                            if (updatedPayload) {
+                                                activeMission = JSON.parse(updatedPayload);
+                                            }
+                                        } else {
+                                            activeObj.isCompleted = true;
+                                            localStorage.setItem('active_mission_payload', JSON.stringify(activeMission));
                                         }
                                     } else {
                                         activeObj.isCompleted = true;
                                         localStorage.setItem('active_mission_payload', JSON.stringify(activeMission));
                                     }
                                 } else {
-                                    activeObj.isCompleted = true;
+                                    const baseText = (activeObj.text || '').replace(/\s*\(\d+\/\d+\)$/, '');
+                                    activeObj.text = `${baseText} (${activeObj.count}/${activeObj.target})`;
                                     localStorage.setItem('active_mission_payload', JSON.stringify(activeMission));
                                 }
 
@@ -772,90 +707,45 @@
                 ctx.stroke();
                 ctx.restore();
 
-                // Render glowing laser beam
+                // Expanding plasma laser beam (hot-white → deep neon-blue, fade outward)
                 if (laserLine && laserTimer > 0) {
-                    ctx.save();
-                    ctx.strokeStyle = '#00ff66';
-                    ctx.lineWidth = 4;
-                    ctx.shadowBlur = 12;
-                    ctx.shadowColor = '#00ff66';
-                    ctx.beginPath();
-                    ctx.moveTo(rx, ry);
-                    ctx.lineTo(laserLine.targetX, laserLine.targetY);
-                    ctx.stroke();
+                    const lifeElapsed = 1 - (laserTimer / LASER_DURATION);
+                    const beamLayers = 5;
 
-                    // Inner core
-                    ctx.strokeStyle = '#ffffff';
-                    ctx.lineWidth = 1.5;
-                    ctx.shadowBlur = 0;
-                    ctx.beginPath();
-                    ctx.moveTo(rx, ry);
-                    ctx.lineTo(laserLine.targetX, laserLine.targetY);
-                    ctx.stroke();
-                    ctx.restore();
+                    for (let layer = 0; layer < beamLayers; layer++) {
+                        const layerT = Math.min(1, lifeElapsed + layer * 0.08);
+                        const alpha = Math.max(0, (1 - layerT) * 0.9);
+                        const lineWidth = 1.5 + lifeElapsed * 18 + layer * 2.5;
+                        const r = Math.round(255 * (1 - layerT) + 0 * layerT);
+                        const g = Math.round(255 * (1 - layerT) + 140 * layerT);
+                        const b = Math.round(255 * (1 - layerT) + 255 * layerT);
+
+                        ctx.save();
+                        ctx.globalAlpha = alpha;
+                        ctx.strokeStyle = `rgb(${r}, ${g}, ${b})`;
+                        ctx.lineWidth = lineWidth;
+                        ctx.lineCap = 'round';
+                        ctx.shadowBlur = 6 + lifeElapsed * 20;
+                        ctx.shadowColor = `rgba(${r}, ${g}, ${b}, ${alpha})`;
+                        ctx.beginPath();
+                        ctx.moveTo(rx, ry);
+                        ctx.lineTo(laserLine.targetX, laserLine.targetY);
+                        ctx.stroke();
+                        ctx.restore();
+                    }
 
                     laserTimer--;
                 }
 
+                ctx.restore();
+
                 requestAnimationFrame(animate);
-            }
-
-            // 8. AUTOMATED RANDOM FIRING INTERACTION
-            function triggerAutomatedLaser() {
-                const completed = activeMission.objectives.filter(o => o.isCompleted).length;
-                const total = activeMission.objectives.length;
-
-                if (lgsArmed && completed < total && particles.length > 0) {
-                    const pendingObjectives = activeMission.objectives.filter(o => !o.isCompleted);
-                    let targetParticle = null;
-
-                    if (pendingObjectives.length > 0) {
-                        const targetIds = pendingObjectives.map(o => o.id);
-                        const candidates = particles.filter(p => {
-                            let pId;
-                            if (p.y < 140) pId = 'obj_leo';
-                            else if (p.y >= 140 && p.y <= 270) pId = 'obj_stratosphere';
-                            else pId = 'obj_troposphere';
-                            return targetIds.includes(pId) || targetIds.includes(pId.replace('obj_', 'mk_'));
-                        });
-
-                        if (candidates.length > 0) {
-                            targetParticle = candidates[Math.floor(Math.random() * candidates.length)];
-                        }
-                    }
-
-                    if (!targetParticle) {
-                        targetParticle = particles[Math.floor(Math.random() * particles.length)];
-                    }
-
-                    if (targetParticle) {
-                        laserLine = { targetX: targetParticle.x, targetY: targetParticle.y };
-                        laserTimer = 10;
-
-                        const statusText = document.querySelector('.adaptive-optics-status-text');
-                        if (statusText && completed < total && !statusText.querySelector('button')) {
-                            statusText.innerText = 'AUTO_FIRING';
-                            statusText.className = 'text-tertiary animate-pulse adaptive-optics-status-text';
-                            setTimeout(() => {
-                                const currentCompleted = activeMission.objectives.filter(o => o.isCompleted).length;
-                                if (statusText && currentCompleted < total && lgsArmed && !statusText.querySelector('button')) {
-                                    statusText.innerText = 'CHARGED';
-                                    statusText.className = 'text-primary adaptive-optics-status-text';
-                                }
-                            }, 300);
-                        }
-                    }
-                }
-
-                const nextInterval = 500 + Math.random() * 700;
-                setTimeout(triggerAutomatedLaser, nextInterval);
             }
 
             // Start everything!
             renderMaunaKeaChecklist();
             syncPurityMetrics();
             animate();
-            triggerAutomatedLaser();
         });
     </script>
 </body>

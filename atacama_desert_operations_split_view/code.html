@@ -139,7 +139,7 @@
             <span class="font-data text-[11px] text-on-surface-variant tracking-wider uppercase">SECTOR: ATACAMA CHILE // INTERFEROMETRY INTERFACE</span>
         </div>
         <div class="flex items-center gap-4 font-data text-[11px] text-on-surface-variant">
-            <span>ARRAY_GRID: <span class="text-tertiary">SYNCHRONIZED</span></span>
+            <span id="lgs-status"></span>
         </div>
     </nav>
 
@@ -149,7 +149,6 @@
             
             <!-- DYNAMIC ACTIVE MISSION COMPACT LOG -->
             <section id="active-mission-section" class="bg-surface-container border border-primary/40 p-panel-padding rounded-sm relative shadow-lg">
-                <div class="absolute top-1 right-2 font-data text-[8px] text-primary animate-pulse">// ACTIVE CONTRACT</div>
                 <div class="bg-primary/10 border border-primary/20 px-2.5 py-1 mb-2.5">
                     <h2 class="text-label-caps font-label-caps text-primary tracking-wider uppercase">ACTIVE HUB MISSION</h2>
                 </div>
@@ -160,72 +159,6 @@
                     <div class="flex justify-between items-center pt-2 border-t border-outline-variant/30 font-data text-[10px]">
                         <span class="opacity-70">CONTRACT VALUE:</span>
                         <span id="sidebar-mission-rewards" class="text-tertiary font-bold">--- CR // --- SI</span>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Array Profile -->
-            <section class="bg-surface-container border border-outline-variant p-panel-padding rounded-sm">
-                <div class="bg-outline-variant/30 px-2 py-0.5 mb-2">
-                    <h3 class="text-label-caps font-label-caps text-on-surface">ARRAY PROFILE</h3>
-                </div>
-                <div class="space-y-1">
-                    <div class="flex justify-between items-center py-0.5 zebra-row">
-                        <span class="text-[11px] font-label-caps text-on-surface-variant">STATION</span>
-                        <span class="text-data-sm font-data-sm text-on-surface">ALMA-MAIN-04</span>
-                    </div>
-                    <div class="flex justify-between items-center py-0.5 zebra-row">
-                        <span class="text-[11px] font-label-caps text-on-surface-variant">ELEVATION</span>
-                        <span class="text-data-sm font-data-sm text-on-surface">5,050 M</span>
-                    </div>
-                    <div class="flex justify-between items-center py-0.5 zebra-row">
-                        <span class="text-[11px] font-label-caps text-on-surface-variant">ANTENNAS ACTIVE</span>
-                        <span class="text-data-sm font-data-sm text-tertiary">64 / 64</span>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Baseline Correlator Status -->
-            <section class="bg-surface-container border border-outline-variant p-panel-padding rounded-sm">
-                <div class="flex justify-between items-center mb-2">
-                    <h3 class="text-label-caps font-label-caps text-on-surface">BASELINE CORRELATOR</h3>
-                    <span class="text-[10px] bg-secondary-container text-on-secondary-container px-1.5 font-data-sm">QUAD-MODE</span>
-                </div>
-                <div class="p-2 bg-surface-container-lowest border border-outline-variant flex justify-between items-center">
-                    <span class="text-data-sm font-data-sm text-on-surface-variant">DATA THROUGHPUT</span>
-                    <span class="text-data-lg font-data-lg text-secondary" id="throughput">1.24 Tb/s</span>
-                </div>
-            </section>
-
-            <!-- Receiver Band Configurations -->
-            <section class="bg-surface-container border border-outline-variant p-panel-padding rounded-sm flex-grow">
-                <h3 class="text-label-caps font-label-caps text-on-surface mb-2">RECEIVER BAND CONFIGURATION</h3>
-                <div class="grid grid-cols-2 gap-2">
-                    <button class="p-2 border border-primary bg-primary/10 text-primary font-data-sm text-left flex flex-col justify-between h-14 rounded-sm">
-                        <span class="text-[10px] font-label-caps opacity-70">BAND 3</span>
-                        <span class="font-bold">100 GHz</span>
-                    </button>
-                    <button class="p-2 border border-outline-variant hover:border-on-surface-variant text-on-surface-variant font-data-sm text-left flex flex-col justify-between h-14 rounded-sm transition-colors">
-                        <span class="text-[10px] font-label-caps opacity-70">BAND 6</span>
-                        <span class="font-bold text-on-surface">230 GHz</span>
-                    </button>
-                    <button class="p-2 border border-outline-variant hover:border-on-surface-variant text-on-surface-variant font-data-sm text-left flex flex-col justify-between h-14 rounded-sm transition-colors">
-                        <span class="text-[10px] font-label-caps opacity-70">BAND 7</span>
-                        <span class="font-bold text-on-surface">345 GHz</span>
-                    </button>
-                    <button class="p-2 border border-outline-variant hover:border-on-surface-variant text-on-surface-variant font-data-sm text-left flex flex-col justify-between h-14 rounded-sm transition-colors">
-                        <span class="text-[10px] font-label-caps opacity-70">BAND 9</span>
-                        <span class="font-bold text-on-surface">650 GHz</span>
-                    </button>
-                </div>
-
-                <div class="mt-4 pt-4 border-t border-outline-variant space-y-2">
-                    <span class="text-[11px] font-label-caps text-on-surface-variant block">PRECIPITABLE WATER VAPOR</span>
-                    <div class="flex items-center gap-3">
-                        <span class="text-data-lg font-data-lg text-primary">0.42 mm</span>
-                        <div class="flex-grow h-1.5 bg-outline-variant rounded-full overflow-hidden">
-                            <div class="h-full bg-primary" style="width: 15%"></div>
-                        </div>
                     </div>
                 </div>
             </section>
@@ -368,7 +301,7 @@
             // Adjust sliders container grid columns and noise box visibility if noise objective exists
             const noiseBox = document.getElementById('noise-slider-box');
             const slidersContainer = document.getElementById('sliders-container');
-            const hasNoise = activePayload.objectives.some(o => o.id === 'at_noise');
+            const hasNoise = activePayload.objectives.some(o => o.id === 'obj_noise');
             if (hasNoise && noiseBox && slidersContainer) {
                 noiseBox.classList.remove('hidden');
                 slidersContainer.classList.remove('grid-cols-2');
@@ -381,17 +314,17 @@
             const sliderNoise = document.getElementById('slider-noise');
 
             activePayload.objectives.forEach(obj => {
-                if (obj.id === 'at_amplitude' && obj.isCompleted) {
+                if (obj.id === 'obj_amp' && obj.isCompleted) {
                     if (sliderA) {
                         sliderA.value = targetA;
                         sliderA.disabled = true;
                     }
-                } else if (obj.id === 'at_frequency' && obj.isCompleted) {
+                } else if (obj.id === 'obj_freq' && obj.isCompleted) {
                     if (sliderF) {
                         sliderF.value = targetF;
                         sliderF.disabled = true;
                     }
-                } else if (obj.id === 'at_noise' && obj.isCompleted) {
+                } else if (obj.id === 'obj_noise' && obj.isCompleted) {
                     if (sliderNoise) {
                         sliderNoise.value = targetNoise;
                         sliderNoise.disabled = true;
@@ -401,6 +334,22 @@
 
             renderChecklist();
             updateMatchDisplays();
+
+            // Check completion on load (staged transaction pattern sync)
+            const allDone = checkAllObjectivesCompleted();
+            if (allDone) {
+                finishedPhase = true;
+                const lgsStatus = document.getElementById("lgs-status");
+                if (lgsStatus) {
+                    lgsStatus.innerHTML = `<button id="btn-complete-mission" class="bg-emerald-500 text-slate-950 font-mono font-bold text-xs px-3 py-1 rounded-sm border border-emerald-400 cursor-pointer">[ DEPLOY ORBITAL DATA UPLINK ]</button>`;
+                    const btn = document.getElementById("btn-complete-mission");
+                    if (btn) {
+                        btn.addEventListener("click", () => {
+                            logTargetCoordinates();
+                        });
+                    }
+                }
+            }
         }
 
         function renderChecklist() {
@@ -410,24 +359,42 @@
             container.innerHTML = '';
             activePayload.objectives.forEach((obj, idx) => {
                 const isCompleted = obj.isCompleted;
-                const zebraClass = idx % 2 === 0 ? 'bg-white/[0.02]' : 'bg-transparent';
                 
-                const row = document.createElement('div');
-                row.className = `flex items-center justify-between p-2 rounded-sm border border-outline-variant/10 ${zebraClass} transition-all`;
+                const li = document.createElement('div');
+                li.className = 'mb-3 flex flex-col';
                 
-                const textClass = isCompleted ? 'text-tertiary line-through font-headline' : 'text-on-surface font-headline';
-                const icon = isCompleted ? 'task_alt' : 'radio_button_unchecked';
-                const iconColor = isCompleted ? 'text-tertiary' : 'text-outline';
-                const statusText = isCompleted ? 'ALIGNED' : 'PENDING';
+                // Line 1: Bold progress ratio
+                const titleLine = document.createElement("div");
+                titleLine.className = "font-data font-bold text-[11px]";
 
-                row.innerHTML = `
-                    <div class="flex items-center gap-2">
-                        <span class="material-symbols-outlined text-[15px] ${iconColor}">${icon}</span>
-                        <span class="text-[11px] leading-none ${textClass}">${obj.text}</span>
-                    </div>
-                    <span class="font-data text-[10px] ${isCompleted ? 'text-tertiary' : 'text-error/70'}">${statusText}</span>
-                `;
-                container.appendChild(row);
+                let displayName = obj.text || "";
+                displayName = displayName.replace(/\s*\(\d+\/\d+\)$/, '');
+
+                const currentCount = typeof obj.count === 'number' ? obj.count : (isCompleted ? 15 : 0);
+                const targetCount = typeof obj.target === 'number' ? obj.target : 15;
+                displayName = `${displayName} (${currentCount}/${targetCount})`;
+
+                if (isCompleted) {
+                    titleLine.style.color = "#00ff66";
+                    titleLine.style.textDecoration = "line-through";
+                    titleLine.innerText = `[X] ${displayName}`;
+                } else {
+                    titleLine.style.color = "#00f3ff";
+                    titleLine.style.textDecoration = "none";
+                    titleLine.innerText = `[ ] ${displayName}`;
+                }
+                li.appendChild(titleLine);
+                
+                // Line 2: Description
+                const descLine = document.createElement("div");
+                descLine.className = "font-data ps-4 text-[10px]";
+                descLine.style.color = "rgba(0, 243, 255, 0.6)";
+                descLine.style.lineHeight = "1.3";
+                descLine.style.marginTop = "2px";
+                descLine.innerText = obj.description || "";
+                li.appendChild(descLine);
+                
+                container.appendChild(li);
             });
         }
 
@@ -441,6 +408,17 @@
             if (allDone && !finishedPhase) {
                 finishedPhase = true;
                 triggerSignalComplete();
+                
+                const lgsStatus = document.getElementById("lgs-status");
+                if (lgsStatus) {
+                    lgsStatus.innerHTML = `<button id="btn-complete-mission" class="bg-emerald-500 text-slate-950 font-mono font-bold text-xs px-3 py-1 rounded-sm border border-emerald-400 cursor-pointer">[ DEPLOY ORBITAL DATA UPLINK ]</button>`;
+                    const btn = document.getElementById("btn-complete-mission");
+                    if (btn) {
+                        btn.addEventListener("click", () => {
+                            logTargetCoordinates();
+                        });
+                    }
+                }
             }
         }
 
@@ -475,11 +453,22 @@
             const noiseText = document.getElementById('noise-val');
             const telemetryText = document.getElementById('sync-telemetry');
 
+            function getAlignmentMargin() {
+                if (window.GameState && typeof GameState.getUpgradeModifier === 'function') {
+                    const mod = GameState.getUpgradeModifier('alignment_margin');
+                    if (typeof mod === 'number') return mod;
+                }
+                return 1.4 + (1 * 0.3);
+            }
+
             function renderOscilloscope() {
                 if (!activePayload) {
                     requestAnimationFrame(renderOscilloscope);
                     return;
                 }
+
+                const alignMargin = getAlignmentMargin();
+                const noiseAlignMargin = alignMargin + 0.2;
                 // Draw Screen Backdrop Grid (CRT Monitor Aesthetics)
                 ctx.fillStyle = '#060a12';
                 ctx.fillRect(0, 0, cw, ch);
@@ -525,43 +514,77 @@
                 if (freqText) freqText.innerText = `${(userF / 1000).toFixed(3)} Hz`;
                 if (noiseText) noiseText.innerText = `${userNoise}%`;
 
-                // Check tolerances and claim milestones
+                // Handshake with hold-to-align analog increments
+                let userWaveEmeraldMatch = false;
                 if (activePayload && activePayload.objectives) {
                     activePayload.objectives.forEach(obj => {
                         if (obj.isCompleted) return;
 
-                        if (obj.id === 'at_amplitude') {
+                        let isMatching = false;
+                        if (obj.id === 'obj_amp') {
                             const diffA = Math.abs(userA - targetA);
-                            if (diffA <= 1.4) {
-                                obj.isCompleted = true;
-                                sliderA.disabled = true;
-                                if (window.GameState) {
-                                    window.GameState.claimMilestone('at_amplitude');
-                                }
-                                renderChecklist();
-                                updateMatchDisplays();
-                            }
-                        } else if (obj.id === 'at_frequency') {
+                            if (diffA <= alignMargin) isMatching = true;
+                        } else if (obj.id === 'obj_freq') {
                             const diffF = Math.abs(userF - targetF);
-                            if (diffF <= 1.4) {
-                                obj.isCompleted = true;
-                                sliderF.disabled = true;
-                                if (window.GameState) {
-                                    window.GameState.claimMilestone('at_frequency');
+                            if (diffF <= alignMargin) isMatching = true;
+                        } else if (obj.id === 'obj_noise') {
+                            const diffNoise = Math.abs(userNoise - targetNoise);
+                            if (diffNoise <= noiseAlignMargin) isMatching = true;
+                        }
+
+                        if (isMatching) {
+                            userWaveEmeraldMatch = true;
+                            if (typeof obj.count !== 'number') obj.count = 0;
+                            if (typeof obj.target !== 'number') obj.target = 15;
+
+                            if (!obj.tickAcc) obj.tickAcc = 0;
+                            obj.tickAcc += 1;
+                            if (obj.tickAcc >= 8) { // holding alignment matches progress!
+                                obj.tickAcc = 0;
+                                obj.count += 1;
+
+                                if (obj.count >= obj.target) {
+                                    obj.count = obj.target;
+                                    localStorage.setItem('active_mission_payload', JSON.stringify(activePayload));
+                                    
+                                    if (window.GameState) {
+                                        const claimed = GameState.claimMilestone(obj.id);
+                                        if (claimed) {
+                                            const updated = localStorage.getItem('active_mission_payload');
+                                            if (updated) activePayload = JSON.parse(updated);
+                                        } else {
+                                            obj.isCompleted = true;
+                                            localStorage.setItem('active_mission_payload', JSON.stringify(activePayload));
+                                        }
+                                    } else {
+                                        obj.isCompleted = true;
+                                        localStorage.setItem('active_mission_payload', JSON.stringify(activePayload));
+                                    }
+
+                                    if (obj.id === 'obj_amp') sliderA.disabled = true;
+                                    else if (obj.id === 'obj_freq') sliderF.disabled = true;
+                                    else if (obj.id === 'obj_noise' && sliderNoise) sliderNoise.disabled = true;
+                                } else {
+                                    const baseText = (obj.text || '').replace(/\s*\(\d+\/\d+\)$/, '');
+                                    obj.text = `${baseText} (${obj.count}/${obj.target})`;
+                                    localStorage.setItem('active_mission_payload', JSON.stringify(activePayload));
                                 }
+
                                 renderChecklist();
                                 updateMatchDisplays();
                             }
-                        } else if (obj.id === 'at_noise') {
-                            const diffNoise = Math.abs(userNoise - targetNoise);
-                            if (diffNoise <= 1.6) {
-                                obj.isCompleted = true;
-                                if (sliderNoise) sliderNoise.disabled = true;
-                                if (window.GameState) {
-                                    window.GameState.claimMilestone('at_noise');
+                        } else {
+                            // Decay matched tracking if alignment shifts back!
+                            if (typeof obj.count === 'number' && obj.count > 0) {
+                                if (!obj.tickAcc) obj.tickAcc = 0;
+                                obj.tickAcc += 1;
+                                if (obj.tickAcc >= 15) {
+                                    obj.tickAcc = 0;
+                                    obj.count = Math.max(0, obj.count - 1);
+                                    localStorage.setItem('active_mission_payload', JSON.stringify(activePayload));
+                                    renderChecklist();
+                                    updateMatchDisplays();
                                 }
-                                renderChecklist();
-                                updateMatchDisplays();
                             }
                         }
                     });
@@ -579,13 +602,13 @@
                         if (obj.isCompleted) {
                             currentProgress += 100;
                         } else {
-                            if (obj.id === 'at_amplitude') {
+                            if (obj.id === 'obj_amp') {
                                 const diffA = Math.abs(userA - targetA);
                                 currentProgress += Math.max(0, 100 - (diffA / targetA) * 100);
-                            } else if (obj.id === 'at_frequency') {
+                            } else if (obj.id === 'obj_freq') {
                                 const diffF = Math.abs(userF - targetF);
                                 currentProgress += Math.max(0, 100 - (diffF / targetF) * 100);
-                            } else if (obj.id === 'at_noise') {
+                            } else if (obj.id === 'obj_noise') {
                                 const diffNoise = Math.abs(userNoise - targetNoise);
                                 currentProgress += Math.max(0, 100 - (diffNoise / targetNoise) * 100);
                             }
@@ -616,7 +639,7 @@
                     // Formulate dynamic math noise that dampens as Noise slider matches target!
                     let noise = 0;
                     if (!finishedPhase) {
-                        const hasNoiseObj = activePayload.objectives.some(o => o.id === 'at_noise');
+                        const hasNoiseObj = activePayload.objectives.some(o => o.id === 'obj_noise');
                         let noiseStrength = 0;
                         if (hasNoiseObj) {
                             const diffNoise = Math.abs(userNoise - targetNoise);
@@ -644,10 +667,17 @@
                 // --- DRAW WAVE 2: CLEAN USER CORRELATOR BEAM ---
                 if (!finishedPhase) {
                     ctx.save();
-                    ctx.lineWidth = 2.0;
-                    ctx.strokeStyle = 'rgba(111, 238, 225, 0.85)'; // Neon primary cyan
-                    ctx.shadowColor = 'rgba(111, 238, 225, 0.4)';
-                    ctx.shadowBlur = 6;
+                    if (userWaveEmeraldMatch) {
+                        ctx.lineWidth = 2.75;
+                        ctx.strokeStyle = '#00ff66';
+                        ctx.shadowColor = '#00ff66';
+                        ctx.shadowBlur = 18;
+                    } else {
+                        ctx.lineWidth = 2.0;
+                        ctx.strokeStyle = 'rgba(111, 238, 225, 0.85)';
+                        ctx.shadowColor = 'rgba(111, 238, 225, 0.4)';
+                        ctx.shadowBlur = 6;
+                    }
 
                     ctx.beginPath();
                     for (let x = 0; x < cw; x++) {

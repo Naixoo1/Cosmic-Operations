@@ -1,8 +1,8 @@
 # Cosmic Ops: Ground Control // Core System Manual
 
 > **SECURITY LEVEL:** CLASS-4 AUTHENTICATED COMMAND ACCESS  
-> **REVISION:** SYSTEM OPERATING PROTOCOL v4.02  
-> **LAST SYNCHRONIZED:** UTC 2026-05-20
+> **REVISION:** SYSTEM OPERATING PROTOCOL v5.0 // PHASE 5 EXODUS  
+> **LAST SYNCHRONIZED:** UTC 2026-05-23
 
 ---
 
@@ -48,14 +48,18 @@ sequenceDiagram
 
 ---
 
-## 📂 2. Structural Tree Map
+## 📂 2. System Architecture & Structural Tree Map
 
-Below is the directory structure of the Cosmic Operations Ground Control interface modules:
+Below is the directory structure of the Cosmic Operations Ground Control interface modules, including the Phase 5 deep-space exploration departure pipeline:
 
 ```
 stitch-cosmic-ops/
 ├── README.md                                  # Core System Operating Manual
 ├── index.html                                 # Master Command Hub & Selector Hub
+├── core/
+│   ├── game-state.js                          # Campaign progression, player IQ, upgrades, Exodus stage flags
+│   ├── mission-engine.js                      # Active mission contracts & staged payload generation
+│   └── player-progression.js                  # Enclosure hardware tiers & character stat synthesis
 ├── assets/
 │   └── shared-styles.css                      # Unified styles, 40px grid mesh, and 4px boundary overrides
 ├── deployment_transition_modal/               # Modal resources and asset files
@@ -63,17 +67,44 @@ stitch-cosmic-ops/
 ├── mauna_kea_operations_split_view/
 │   └── code.html                              # Adaptive optics & Laser Guide Star viewport
 ├── bosscha_observatory_operations_split_view/
-│   ├── code.html                              # Historic Zeiss refractor & Bortle scale tracker
+│   ├── code.html                              # Zeiss photometry deck; Project Exodus routes to departure node
 │   └── screen.png                             # Port visual interface preview
-└── atacama_desert_operations_split_view/
-    ├── code.html                              # Interferometry correlator pipeline viewport
-    └── screen.png                             # Port visual interface preview
+├── atacama_desert_operations_split_view/
+│   ├── code.html                              # Interferometry correlator pipeline viewport
+│   └── screen.png                             # Port visual interface preview
+└── exodus/
+    ├── departure.html                         # Standalone cinematic finale (Deep Cosmic Amber theme)
+    └── assets/
+        └── background.mp4                     # Custom space exploration loop behind the candidate deck
 ```
 
+### Phase 5: Deep-Space Exploration Critical Path
+
+When the **Project Exodus** contract completes at full photometric purity, client-side routing bypasses the standard hub return and opens the departure terminal. The following layout maps the essential Phase 5 modules:
+
+```
+[ Your Project Directory ]
+├── core/
+│    └── game-state.js         <-- Tracks campaign progression, player levels, and IQ mechanics
+├── bosscha/
+│    └── code.html             <-- Directs the client-side window routing to the departure node
+└── exodus/
+     ├── departure.html        <-- Standalone cinematic finale screen (Deep Cosmic Amber Theme)
+     └── assets/
+          └── background.mp4   <-- Custom space exploration loop playing behind the candidate deck
+```
+
+> **Workspace note:** The Bosscha enclosure is deployed at `bosscha_observatory_operations_split_view/code.html` in this repository; it fulfills the `bosscha/code.html` routing role described above.
+
 ### Module Descriptions
-* **`index.html`:** Host file managing the master telemetry, satellite downlinks, global logs, and the central system handshake sequencer.
+* **`index.html`:** Host file managing the master telemetry, satellite downlinks, global logs, the System Tech Enhancements storefront, and the central system handshake sequencer.
+* **`core/game-state.js`:** Persists `campaignStage`, `totalObjectivesFinished`, IQ calculation (`100 + objectives × 3`), hardware upgrade tiers, and Exodus completion state in `localStorage`.
+* **`core/mission-engine.js`:** Generates station contracts (including **Project Exodus**) and stages `active_mission_payload` for viewport enclosures.
 * **`assets/shared-styles.css`:** Imposes strict visual parameters, ensuring matching background grids, layout radii, and glassmorphism transparency filters.
 * **`*_operations_split_view/code.html`:** Standalone dashboard nodes featuring custom station readouts, real-time wave error models, skyglow trackers, and dynamic telemetry arrays.
+* **`bosscha_observatory_operations_split_view/code.html`:** Final enclosure in the Exodus arc; upon 30-packet transit logging at 100% data purity, executes `window.location.href = "../exodus/departure.html"`.
+* **`exodus/departure.html`:** Standalone departure terminal with amber cinematic UI, commander profile matrix, and finale credits scroll.
+* **`exodus/assets/background.mp4`:** Full-viewport ambient loop rendered beneath the classified candidate scanner deck.
 
 ---
 

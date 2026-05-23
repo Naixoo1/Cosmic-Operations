@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>PROJECT EXODUS // DEPARTURE TERMINAL</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet"/>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body {
+            height: 100%;
+            overflow: hidden;
+            font-family: 'JetBrains Mono', monospace;
+            background: #0a0502;
+            color: #ffb347;
+        }
+        #video-layer {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            overflow: hidden;
+        }
+        #space-bg {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: saturate(1.2) contrast(1.1);
+        }
+        #viewport-tint {
+            position: fixed;
+            inset: 0;
+            z-index: 1;
+            background: rgba(24, 12, 2, 0.75);
+            pointer-events: none;
+        }
+        #terminal-root {
+            position: relative;
+            z-index: 2;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 1.5rem;
+            overflow: hidden;
+        }
+        .terminal-header {
+            border-bottom: 1px solid rgba(255, 140, 50, 0.35);
+            padding-bottom: 0.75rem;
+            margin-bottom: 1rem;
+        }
+        .terminal-header h1 {
+            font-size: 0.85rem;
+            letter-spacing: 0.2em;
+            color: #ff9f2e;
+            text-shadow: 0 0 12px rgba(255, 120, 30, 0.6);
+        }
+        .terminal-header p {
+            font-size: 0.65rem;
+            color: rgba(255, 180, 100, 0.65);
+            margin-top: 0.35rem;
+        }
+        #boot-stream {
+            min-height: 3.5rem;
+            font-size: 0.7rem;
+            line-height: 1.5;
+            color: #ffab4d;
+            text-shadow: 0 0 8px rgba(255, 100, 20, 0.45);
+            margin-bottom: 1rem;
+        }
+        #boot-stream .line { opacity: 0; animation: lineIn 0.25s forwards; }
+        @keyframes lineIn { to { opacity: 1; } }
+        #scanner-deck {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.75rem;
+            min-height: 0;
+            transition: opacity 1.2s ease, transform 1.2s ease;
+        }
+        #scanner-deck.faded-out {
+            opacity: 0;
+            transform: scale(0.96);
+            pointer-events: none;
+        }
+        .specimen-card {
+            border: 1px solid rgba(255, 130, 40, 0.45);
+            background: rgba(30, 14, 4, 0.72);
+            box-shadow: inset 0 0 24px rgba(255, 80, 0, 0.08), 0 0 20px rgba(255, 100, 20, 0.12);
+            padding: 0.85rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            border-radius: 2px;
+        }
+        .specimen-card.locked {
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        .specimen-card h3 {
+            font-size: 0.62rem;
+            letter-spacing: 0.12em;
+            color: #ff8c1a;
+        }
+        .specimen-card .stat {
+            font-size: 0.68rem;
+            color: rgba(255, 200, 140, 0.9);
+        }
+        .specimen-card .locked-msg {
+            font-size: 0.58rem;
+            color: rgba(255, 150, 60, 0.85);
+            animation: bracketBlink 1.2s step-end infinite;
+        }
+        .specimen-card .mystery {
+            font-size: 4.5rem;
+            line-height: 1;
+            color: #ff6a00;
+            text-shadow: 0 0 30px rgba(255, 100, 0, 0.55);
+            filter: blur(0.3px);
+            animation: matrixPulse 2.5s ease-in-out infinite;
+        }
+        @keyframes bracketBlink { 50% { opacity: 0.35; } }
+        @keyframes matrixPulse {
+            0%, 100% { transform: scale(1) skewX(0deg); opacity: 0.85; }
+            50% { transform: scale(1.04) skewX(-2deg); opacity: 1; }
+        }
+        #decision-matrix {
+            margin-top: 1rem;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.8s ease;
+        }
+        #decision-matrix.visible { opacity: 1; }
+        #commander-prompt {
+            font-size: 0.8rem;
+            line-height: 1.6;
+            color: #ffc266;
+            min-height: 1.4rem;
+            text-shadow: 0 0 10px rgba(255, 120, 30, 0.5);
+            letter-spacing: 0.07em;
+            word-spacing: 0.15em;
+            margin-bottom: 16px;
+        }
+        #btn-final-launch {
+            display: none;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            font-family: inherit;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.14em;
+            color: #1a0c02;
+            background: linear-gradient(180deg, #ff9f2e 0%, #cc5a00 100%);
+            border: 2px solid #ffb84d;
+            box-shadow: 0 0 28px rgba(255, 120, 20, 0.65);
+            cursor: pointer;
+            animation: launchBlink 1.4s ease-in-out infinite;
+        }
+        #btn-final-launch.visible { display: inline-block; }
+        #btn-final-launch:hover {
+            background: linear-gradient(180deg, #ffbf66 0%, #e07010 100%);
+        }
+        @keyframes launchBlink {
+            0%, 100% { box-shadow: 0 0 20px rgba(255, 120, 20, 0.5); }
+            50% { box-shadow: 0 0 40px rgba(255, 160, 60, 0.95); }
+        }
+        #credits-screen {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 20;
+            background: rgba(10, 5, 2, 0.92);
+            overflow: hidden;
+        }
+        #credits-screen.active { display: block; }
+        #credits-screen.shake {
+            animation: screenShake 0.45s ease;
+        }
+        @keyframes screenShake {
+            0%, 100% { transform: translate(0, 0); }
+            20% { transform: translate(-6px, 4px); }
+            40% { transform: translate(5px, -3px); }
+            60% { transform: translate(-4px, -5px); }
+            80% { transform: translate(4px, 2px); }
+        }
+        #credits-scroll {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: -100%;
+            padding: 2rem;
+            text-align: center;
+            animation: creditsRise 22s linear forwards;
+        }
+        @keyframes creditsRise {
+            from { bottom: -80%; }
+            to { bottom: 110%; }
+        }
+        #credits-scroll h2 {
+            font-size: 1.1rem;
+            color: #ff9f2e;
+            margin-bottom: 1.5rem;
+            letter-spacing: 0.15em;
+        }
+        #credits-scroll p {
+            font-size: 0.72rem;
+            line-height: 1.8;
+            color: rgba(255, 190, 120, 0.85);
+            max-width: 36rem;
+            margin: 0 auto 1rem;
+        }
+        #btn-reinitialize {
+            margin-top: 2rem;
+            padding: 0.75rem 1.5rem;
+            font-family: inherit;
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            color: #ffcc80;
+            background: transparent;
+            border: 1px solid rgba(255, 140, 50, 0.6);
+            cursor: pointer;
+        }
+        #btn-reinitialize:hover {
+            background: rgba(255, 100, 20, 0.15);
+        }
+        #cinema-loading-screen {
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            background: #0a0500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 1;
+            transition: opacity 1.2s ease-in-out;
+            pointer-events: auto;
+        }
+        #cinema-loading-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .cinema-loading-panel {
+            width: min(92vw, 32rem);
+            text-align: center;
+            padding: 2rem 1.5rem;
+            border: 1px solid rgba(255, 130, 40, 0.35);
+            background: rgba(24, 10, 2, 0.88);
+            box-shadow: 0 0 40px rgba(255, 90, 0, 0.18), inset 0 0 30px rgba(255, 60, 0, 0.06);
+        }
+        #cinema-initiative-label {
+            font-size: 0.62rem;
+            letter-spacing: 0.22em;
+            color: #ff8c1a;
+            text-shadow: 0 0 14px rgba(255, 110, 20, 0.55);
+            margin-bottom: 1.25rem;
+            animation: cinemaPulse 1.6s ease-in-out infinite;
+        }
+        @keyframes cinemaPulse {
+            0%, 100% { opacity: 0.55; }
+            50% { opacity: 1; }
+        }
+        #cinema-progress-readout {
+            font-size: 0.72rem;
+            line-height: 1.55;
+            letter-spacing: 0.06em;
+            word-spacing: 0.1em;
+            color: #ffc266;
+            text-shadow: 0 0 10px rgba(255, 120, 30, 0.45);
+            min-height: 2.4rem;
+            margin-bottom: 0.85rem;
+        }
+        #cinema-progress-track {
+            width: 100%;
+            height: 3px;
+            background: rgba(255, 100, 20, 0.12);
+            border: 1px solid rgba(255, 130, 50, 0.25);
+            overflow: hidden;
+        }
+        #cinema-progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #cc5a00 0%, #ff9f2e 55%, #ffcc66 100%);
+            box-shadow: 0 0 12px rgba(255, 140, 40, 0.75);
+            transition: width 0.08s linear;
+        }
+        @media (max-width: 900px) {
+            #scanner-deck { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+    <div id="cinema-loading-screen" aria-live="polite" aria-busy="true">
+        <div class="cinema-loading-panel">
+            <div id="cinema-initiative-label">SYSTEM INITIATIVE: PROJECT EXODUS</div>
+            <div id="cinema-progress-readout">ESTABLISHING TRANSLUNAR COURIER VECTOR... [ 0% ]</div>
+            <div id="cinema-progress-track">
+                <div id="cinema-progress-bar"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="video-layer">
+        <video autoplay muted loop playsinline id="space-bg">
+            <source src="assets/background.mp4" type="video/mp4"/>
+        </video>
+    </div>
+    <div id="viewport-tint"></div>
+
+    <div id="terminal-root">
+        <header class="terminal-header">
+            <h1>PROJECT EXODUS // DEEP RECONNAISSANCE DEPARTURE TERMINAL</h1>
+            <p>CLASSIFIED INTERSTELLAR TRANSIT AUTHORIZATION NODE — STANDALONE CINEMATIC INTERFACE</p>
+        </header>
+
+        <div id="boot-stream" aria-live="polite"></div>
+
+        <div id="scanner-deck">
+            <div class="specimen-card" id="card-commander">
+                <h3>// ACTIVE COMMANDER PROFILE</h3>
+                <div class="stat" id="stat-level">LEVEL: —</div>
+                <div class="stat" id="stat-iq">IQ: —</div>
+                <div class="stat" id="stat-objectives">COMPLETED OBJECTIVES: —</div>
+                <div class="stat" id="stat-upgrades">MAXED UPGRADES: —</div>
+            </div>
+            <div class="specimen-card locked">
+                <div class="locked-msg">[ DETECTING POTENTIAL CANDIDATE... ]</div>
+                <div class="mystery">?</div>
+            </div>
+            <div class="specimen-card locked">
+                <div class="locked-msg">[ DETECTING POTENTIAL CANDIDATE... ]</div>
+                <div class="mystery">?</div>
+            </div>
+            <div class="specimen-card locked">
+                <div class="locked-msg">[ DETECTING POTENTIAL CANDIDATE... ]</div>
+                <div class="mystery">?</div>
+            </div>
+        </div>
+
+        <div id="decision-matrix">
+            <div id="commander-prompt" style="letter-spacing: 0.07em; word-spacing: 0.15em; margin-bottom: 16px;"></div>
+            <button type="button" id="btn-final-launch">[ LAUNCH EXODUS INTERSTELLAR TRANSIT ]</button>
+        </div>
+    </div>
+
+    <div id="credits-screen">
+        <div id="credits-scroll">
+            <h2>THANK YOU FOR PLAYING COSMIC OPERATIONS COMMAND HUB.</h2>
+            <p>You have completed the terrestrial observatory campaign and authorized Project Exodus — the first interstellar departure from Mission Control.</p>
+            <p>Mauna Kea cleared the skies. Atacama phased the void. Bosscha logged the transit minima. Your command profile now enters the deep reconnaissance registries.</p>
+            <p>Three crew slots remain locked — future expeditions await.</p>
+            <p style="margin-top: 2rem; opacity: 0.6;">// END TRANSMISSION // COSMIC OPS v5.0</p>
+            <button type="button" id="btn-reinitialize">[ RE-INITIALIZE MISSION CONTROL ]</button>
+        </div>
+    </div>
+
+    <script>
+        const BOOT_LINES = [
+            '// BOOTING DEEP RECONNAISSANCE ENGINE... SUCCESS',
+            '// UNLOCKING CLASSIFIED INTERSTELLAR REGISTRIES...',
+            '// SCANNING TARGET MATRIX SPECIMENS...',
+            '// PROJECT EXODUS DEPARTURE CHANNEL: ONLINE'
+        ];
+        const PROMPT_TEXT = 'ARE YOU READY TO EXPLORE THE UNKNOWN, COMMANDER?';
+        const CINEMA_LOADING_MS = 3500;
+        const CINEMA_READOUT_STAGES = [
+            { pct: 0, text: 'ESTABLISHING TRANSLUNAR COURIER VECTOR...' },
+            { pct: 25, text: 'CALCULATING ORBITAL ESCAPE TRAJECTORY...' },
+            { pct: 60, text: 'SYNCHRONIZING WARP CORE COIL INDUCTION...' },
+            { pct: 85, text: 'PUNCTURING EARTH MAGNETOSPHERE BOUNDARY...' },
+            { pct: 100, text: 'VECTOR ESTABLISHED. DISCONNECTING COSMIC CONTROL NODES.' }
+        ];
+
+        function getCinemaReadoutForPercent(pct) {
+            let message = CINEMA_READOUT_STAGES[0].text;
+            for (let i = CINEMA_READOUT_STAGES.length - 1; i >= 0; i--) {
+                if (pct >= CINEMA_READOUT_STAGES[i].pct) {
+                    message = CINEMA_READOUT_STAGES[i].text;
+                    break;
+                }
+            }
+            return `${message} [ ${pct}% ]`;
+        }
+
+        function runCinemaLoadingSequence(onComplete) {
+            const overlay = document.getElementById('cinema-loading-screen');
+            const readout = document.getElementById('cinema-progress-readout');
+            const bar = document.getElementById('cinema-progress-bar');
+            const startTime = performance.now();
+
+            function tick(now) {
+                const elapsed = now - startTime;
+                const pct = Math.min(100, Math.round((elapsed / CINEMA_LOADING_MS) * 100));
+
+                readout.innerText = getCinemaReadoutForPercent(pct);
+                bar.style.width = `${pct}%`;
+
+                if (pct < 100) {
+                    requestAnimationFrame(tick);
+                    return;
+                }
+
+                setTimeout(() => {
+                    overlay.classList.add('hidden');
+                    overlay.setAttribute('aria-busy', 'false');
+                    if (onComplete) onComplete();
+                }, 400);
+            }
+
+            requestAnimationFrame(tick);
+        }
+
+        function startDepartureTerminal() {
+            const video = document.getElementById('space-bg');
+            if (video && video.paused) {
+                video.play().catch(() => {});
+            }
+            loadCommanderProfile();
+            streamBootLines(() => {
+                setTimeout(showDecisionMatrix, 600);
+            });
+        }
+
+        function loadCommanderProfile() {
+            let state = null;
+            try {
+                const raw = localStorage.getItem('cosmic_ops_game_state');
+                if (raw) state = JSON.parse(raw);
+            } catch (e) {
+                console.warn('Profile load failed', e);
+            }
+
+            const objectives = state && typeof state.totalObjectivesFinished === 'number'
+                ? state.totalObjectivesFinished
+                : 0;
+            const iq = 100 + (objectives * 3);
+            const stage = state && state.campaignStage ? state.campaignStage : 1;
+            let maxed = 0;
+            if (state && state.upgrades) {
+                maxed = Object.keys(state.upgrades).filter((k) => {
+                    const u = state.upgrades[k];
+                    return u && u.level >= u.max;
+                }).length;
+            }
+
+            document.getElementById('stat-level').innerText = `LEVEL: ${stage}`;
+            document.getElementById('stat-iq').innerText = `IQ: ${iq}`;
+            document.getElementById('stat-objectives').innerText = `COMPLETED OBJECTIVES: ${objectives}`;
+            document.getElementById('stat-upgrades').innerText = `MAXED UPGRADES: ${maxed}/3`;
+        }
+
+        function streamBootLines(onComplete) {
+            const container = document.getElementById('boot-stream');
+            container.innerHTML = '';
+            let idx = 0;
+
+            function pushLine() {
+                if (idx >= BOOT_LINES.length) {
+                    if (onComplete) onComplete();
+                    return;
+                }
+                const line = document.createElement('div');
+                line.className = 'line';
+                line.style.animationDelay = '0ms';
+                line.innerText = BOOT_LINES[idx];
+                container.appendChild(line);
+                idx += 1;
+                setTimeout(pushLine, 420);
+            }
+            pushLine();
+        }
+
+        function typePrompt(onComplete) {
+            const el = document.getElementById('commander-prompt');
+            el.innerText = '';
+            let i = 0;
+            const tick = () => {
+                if (i < PROMPT_TEXT.length) {
+                    el.innerText += PROMPT_TEXT.charAt(i);
+                    i += 1;
+                    setTimeout(tick, 38);
+                } else if (onComplete) {
+                    onComplete();
+                }
+            };
+            tick();
+        }
+
+        function showDecisionMatrix() {
+            document.getElementById('decision-matrix').classList.add('visible');
+            typePrompt(() => {
+                document.getElementById('btn-final-launch').classList.add('visible');
+            });
+        }
+
+        function runFinale() {
+            const deck = document.getElementById('scanner-deck');
+            const decision = document.getElementById('decision-matrix');
+            const credits = document.getElementById('credits-screen');
+
+            deck.classList.add('faded-out');
+            decision.style.opacity = '0';
+            decision.style.pointerEvents = 'none';
+
+            setTimeout(() => {
+                credits.classList.add('active', 'shake');
+                setTimeout(() => credits.classList.remove('shake'), 500);
+            }, 600);
+        }
+
+        function reinitializeMissionControl() {
+            const keys = [
+                'cosmic_ops_game_state',
+                'cosmic_ops_active_missions',
+                'cosmic_ops_completed_missions',
+                'cosmic_ops_enclosure_upgrades',
+                'active_mission_payload'
+            ];
+            keys.forEach((k) => localStorage.removeItem(k));
+            window.location.href = '../index.html';
+        }
+
+        document.getElementById('btn-final-launch').addEventListener('click', runFinale);
+        document.getElementById('btn-reinitialize').addEventListener('click', reinitializeMissionControl);
+
+        window.addEventListener('load', () => {
+            runCinemaLoadingSequence(startDepartureTerminal);
+        });
+    </script>
+</body>
+</html>

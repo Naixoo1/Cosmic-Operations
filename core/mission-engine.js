@@ -76,6 +76,14 @@
                 rewardCredits: 90,
                 rewardScience: 30,
                 rewardSafety: 10
+            },
+            {
+                title: "Project Exodus",
+                description: "Execute the classified deep-space departure protocol. Stream 30 transit data packets at full photometric purity to authorize interstellar launch.",
+                rewardCredits: 500,
+                rewardScience: 200,
+                rewardSafety: 25,
+                contractType: "exodus"
             }
         ]
     };
@@ -185,43 +193,45 @@
 
             // Generate exactly 2 distinct (Standard) or exactly 3 (Critical) concurrent objectives tailored to that station
             const objectives = [];
+            const objectiveDefaults = { count: 0, target: 15, isCompleted: false };
+
             if (site === 'mauna_kea') {
                 if (tier === 'critical') {
                     objectives.push(
-                        { id: 'obj_troposphere', text: 'Purify Troposphere Layer', isCompleted: false, payoutShare: 0.33 },
-                        { id: 'obj_stratosphere', text: 'Purify Stratosphere Layer', isCompleted: false, payoutShare: 0.33 },
-                        { id: 'obj_leo', text: 'Purify LEO Layer', isCompleted: false, payoutShare: 0.34 }
+                        { id: 'obj_troposphere', text: 'Purify Troposphere Layer', description: 'Vaporize low-altitude carbon aerosol concentrations trapped in the dense moisture boundary.', ...objectiveDefaults, payoutShare: 0.33 },
+                        { id: 'obj_stratosphere', text: 'Purify Stratosphere Layer', description: 'Neutralize mid-altitude chemical haze particulate blocking precision telescope wave lenses.', ...objectiveDefaults, payoutShare: 0.33 },
+                        { id: 'obj_leo', text: 'Purify LEO Layer', description: 'Deorbit fast-moving space junk grids reflecting stray solar rays into the mirror arrays.', ...objectiveDefaults, payoutShare: 0.34 }
                     );
                 } else {
                     objectives.push(
-                        { id: 'obj_troposphere', text: 'Purify Troposphere Layer', isCompleted: false, payoutShare: 0.50 },
-                        { id: 'obj_stratosphere', text: 'Purify Stratosphere Layer', isCompleted: false, payoutShare: 0.50 }
+                        { id: 'obj_troposphere', text: 'Purify Troposphere Layer', description: 'Vaporize low-altitude carbon aerosol concentrations trapped in the dense moisture boundary.', ...objectiveDefaults, payoutShare: 0.50 },
+                        { id: 'obj_stratosphere', text: 'Purify Stratosphere Layer', description: 'Neutralize mid-altitude chemical haze particulate blocking precision telescope wave lenses.', ...objectiveDefaults, payoutShare: 0.50 }
                     );
                 }
             } else if (site === 'atacama') {
                 if (tier === 'critical') {
                     objectives.push(
-                        { id: 'at_amplitude', text: 'Match Target Amplitude', isCompleted: false, payoutShare: 0.33 },
-                        { id: 'at_frequency', text: 'Match Target Frequency', isCompleted: false, payoutShare: 0.33 },
-                        { id: 'at_noise', text: 'Match Noise Filtering', isCompleted: false, payoutShare: 0.34 }
+                        { id: 'obj_amp', text: 'Match Target Amplitude', description: 'Adjust wave amplitude modulators until the live signal curve matches the destination overlay.', ...objectiveDefaults, payoutShare: 0.33 },
+                        { id: 'obj_freq', text: 'Match Target Frequency', description: 'Tune phase frequency oscillators to stabilize multi-path wave interferences in the sub-millimeter array.', ...objectiveDefaults, payoutShare: 0.33 },
+                        { id: 'obj_noise', text: 'Match Noise Filtering', description: 'Filter out background cosmic noise to isolate the primary array signal.', ...objectiveDefaults, payoutShare: 0.34 }
                     );
                 } else {
                     objectives.push(
-                        { id: 'at_amplitude', text: 'Match Target Amplitude', isCompleted: false, payoutShare: 0.50 },
-                        { id: 'at_frequency', text: 'Match Target Frequency', isCompleted: false, payoutShare: 0.50 }
+                        { id: 'obj_amp', text: 'Match Target Amplitude', description: 'Adjust wave amplitude modulators until the live signal curve matches the destination overlay.', ...objectiveDefaults, payoutShare: 0.50 },
+                        { id: 'obj_freq', text: 'Match Target Frequency', description: 'Tune phase frequency oscillators to stabilize multi-path wave interferences in the sub-millimeter array.', ...objectiveDefaults, payoutShare: 0.50 }
                     );
                 }
             } else if (site === 'bosscha') {
                 if (tier === 'critical') {
                     objectives.push(
-                        { id: 'bs_lock', text: 'Lock Target Coordinates', isCompleted: false, payoutShare: 0.33 },
-                        { id: 'bs_calibrate', text: 'Calibrate Photometer Sensor', isCompleted: false, payoutShare: 0.33 },
-                        { id: 'bs_transit', text: 'Capture Transit Minima', isCompleted: false, payoutShare: 0.34 }
+                        { id: 'bs_lock', text: 'Lock Target Coordinates', description: 'Manually guide and lock primary vector crosshairs onto targeted deep-space transit regions.', ...objectiveDefaults, payoutShare: 0.33 },
+                        { id: 'bs_calibrate', text: 'Calibrate Photometer Sensor', description: 'Calibrate the photometer sensor array to establish a baseline starlight energy reading.', ...objectiveDefaults, payoutShare: 0.33 },
+                        { id: 'bs_transit', text: 'Capture Transit Minima', description: 'Log dipping transit light curve minima data streams of 15 packets to confirm exoplanetary passes.', ...objectiveDefaults, payoutShare: 0.34 }
                     );
                 } else {
                     objectives.push(
-                        { id: 'bs_lock', text: 'Lock Target Coordinates', isCompleted: false, payoutShare: 0.50 },
-                        { id: 'bs_transit', text: 'Capture Transit Minima', isCompleted: false, payoutShare: 0.50 }
+                        { id: 'bs_lock', text: 'Lock Target Coordinates', description: 'Manually guide and lock primary vector crosshairs onto targeted deep-space transit regions.', ...objectiveDefaults, payoutShare: 0.50 },
+                        { id: 'bs_transit', text: 'Capture Transit Minima', description: 'Log dipping transit light curve minima data streams of 15 packets to confirm exoplanetary passes.', ...objectiveDefaults, payoutShare: 0.50 }
                     );
                 }
             }
@@ -236,6 +246,7 @@
                 rewardSafety: template.rewardSafety,
                 status: 'active',
                 tier: tier,
+                contractType: template.contractType || null,
                 objectives: objectives
             };
         },
@@ -249,7 +260,6 @@
 
         /**
          * Stages a mission to active_mission_payload in localStorage for the viewport to claim
-         * (acts as the generateMissionPayload routine where the active mission payload is saved)
          */
         stageMission(missionId) {
             const mission = activeMissions.find(m => m.id === missionId && m.status === 'active');
@@ -258,13 +268,17 @@
                 return null;
             }
 
-            // Explicitly purge any old active_mission_payload key in system memory before writing new parameters
+            // Milestone 3: Explicitly purge and reset any old active_mission_payload state to prevent cross-session pollution
             localStorage.removeItem('active_mission_payload');
+
+            const isExodusContract = mission.contractType === 'exodus' ||
+                /project\s+exodus/i.test(mission.title || '');
 
             const payload = {
                 missionId: mission.id,
                 stationId: mission.site,
                 objectiveText: mission.title,
+                description: mission.description,
                 creditReward: mission.rewardCredits,
                 totalCreditReward: mission.rewardCredits,
                 intelReward: mission.rewardScience,
@@ -272,13 +286,23 @@
                 scienceReward: mission.rewardScience,
                 safetyReward: mission.rewardSafety,
                 tier: mission.tier || 'standard',
-                // Explicitly map objective items to ensure their isCompleted attributes are strictly set to false upon object construction
-                objectives: (mission.objectives || []).map((obj, idx) => ({
-                    id: obj.id || `obj-${idx}-${Date.now()}`,
-                    text: obj.text || `Objective ${idx + 1}`,
-                    isCompleted: false,
-                    payoutShare: typeof obj.payoutShare === 'number' ? obj.payoutShare : 0.50
-                }))
+                contractType: isExodusContract ? 'exodus' : null,
+                objectives: (mission.objectives || []).map((obj, idx) => {
+                    let baseText = obj.text || `Objective ${idx + 1}`;
+                    baseText = baseText.replace(/\s*\(\d+\/\d+\)$/, '');
+
+                    const packetTarget = (isExodusContract && obj.id === 'bs_transit') ? 30 : 15;
+
+                    return {
+                        id: obj.id || `obj-${idx}-${Date.now()}`,
+                        text: `${baseText} (0/${packetTarget})`,
+                        description: obj.description || "",
+                        isCompleted: false,
+                        count: 0,
+                        target: packetTarget,
+                        payoutShare: typeof obj.payoutShare === 'number' ? obj.payoutShare : 0.50
+                    };
+                })
             };
 
             localStorage.setItem('active_mission_payload', JSON.stringify(payload));
@@ -287,7 +311,7 @@
         },
 
         /**
-         * Completes a mission and replaces it with a new one (rewards are handled by GameState)
+         * Completes a mission and replaces it with a new one
          */
         completeMission(missionId) {
             const index = activeMissions.findIndex(m => m.id === missionId && m.status === 'active');
@@ -330,9 +354,7 @@
                     const currentRating = window.GameState.getSafetyRating();
                     
                     // Slightly adjust rating downwards (safety rating decay)
-                    // If rating falls below 80%, threat waves overwhelm the sector
                     if (currentRating > 0) {
-                        // Decay faster if safety rating is already low, modeling an escalating threat
                         const decayFactor = currentRating < 80 ? -0.75 : -0.4;
                         window.GameState.adjustSafetyRating(decayFactor);
                     }

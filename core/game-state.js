@@ -7,12 +7,62 @@
  */
 
 (function() {
+    const UPGRADE_BASE = {
+        laser_width: 8,
+        alignment_margin: 1.4,
+        log_speed: 85
+    };
+
+    function getDefaultUpgrades() {
+        return {
+            laser_width: { level: 1, max: 3, cost: 150, modifierStep: 4 },
+            alignment_margin: { level: 1, max: 3, cost: 200, modifierStep: 0.3 },
+            log_speed: { level: 1, max: 3, cost: 175, modifierStep: 15 }
+        };
+    }
+
+    function cloneDefaultUpgrades() {
+        return JSON.parse(JSON.stringify(getDefaultUpgrades()));
+    }
+
+    function mergeUpgrades(savedUpgrades) {
+        const defaults = getDefaultUpgrades();
+        const merged = {};
+        Object.keys(defaults).forEach((key) => {
+            const base = defaults[key];
+            const saved = savedUpgrades && savedUpgrades[key] ? savedUpgrades[key] : {};
+            merged[key] = { ...base, ...saved };
+            if (merged[key].modifierStep === undefined && merged[key].modifier !== undefined) {
+                merged[key].modifierStep = base.modifierStep;
+                delete merged[key].modifier;
+            }
+            merged[key].level = Math.max(1, Math.min(merged[key].level, merged[key].max));
+        });
+        return merged;
+    }
+
+    function syncPlayerIQ() {
+        const finished = currentState.totalObjectivesFinished || 0;
+        currentState.playerIQ = 100 + (finished * 3);
+    }
+
+    function countMaxedUpgrades(upgrades) {
+        if (!upgrades) return 0;
+        return Object.keys(upgrades).filter((key) => {
+            const u = upgrades[key];
+            return u && u.level >= u.max;
+        }).length;
+    }
+
     // 1. Core Default Configuration
     const DEFAULT_STATE = {
         credits: 500,
         scienceIntelligence: 0,
         playerIQ: 100,
-        safetyRating: 100 // Out of 100%
+        safetyRating: 100,
+        campaignStage: 1,
+        totalObjectivesFinished: 0,
+        upgrades: cloneDefaultUpgrades()
     };
 
     const LOCAL_STORAGE_KEY = 'cosmic_ops_game_state';
@@ -22,14 +72,10 @@
 
     // 3. State Management Object
     const GameState = {
-        /**
-         * Initialize the game state from localStorage or defaults
-         */
         init() {
             this.load();
             this.dispatchUpdate();
-            
-            // Listen to storage events from other pages to keep terminals synced
+
             window.addEventListener('storage', (e) => {
                 if (e.key === LOCAL_STORAGE_KEY) {
                     this.load();
@@ -38,30 +84,36 @@
             });
         },
 
-        /**
-         * Loads state from localStorage
-         */
         load() {
             try {
                 const serialized = localStorage.getItem(LOCAL_STORAGE_KEY);
                 if (serialized) {
                     const parsed = JSON.parse(serialized);
-                    // Ensure all keys are present
-                    currentState = { ...DEFAULT_STATE, ...parsed };
+                    currentState = {
+                        ...DEFAULT_STATE,
+                        ...parsed,
+                        upgrades: mergeUpgrades(parsed.upgrades)
+                    };
+                    if (typeof currentState.campaignStage !== 'number') currentState.campaignStage = 1;
+                    if (typeof currentState.totalObjectivesFinished !== 'number') currentState.totalObjectivesFinished = 0;
+                    syncPlayerIQ();
                 } else {
-                    currentState = { ...DEFAULT_STATE };
+                    currentState = {
+                        ...DEFAULT_STATE,
+                        upgrades: cloneDefaultUpgrades()
+                    };
                     this.save();
                 }
             } catch (err) {
                 console.error("Failed to load game state from localStorage:", err);
-                currentState = { ...DEFAULT_STATE };
+                currentState = {
+                    ...DEFAULT_STATE,
+                    upgrades: cloneDefaultUpgrades()
+                };
             }
             return currentState;
         },
 
-        /**
-         * Saves state to localStorage
-         */
         save() {
             try {
                 localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(currentState));
@@ -71,12 +123,113 @@
             }
         },
 
-        /**
-         * Resets state to default configurations
-         */
         reset() {
-            currentState = { ...DEFAULT_STATE };
+            currentState = {
+                ...DEFAULT_STATE,
+                upgrades: cloneDefaultUpgrades()
+            };
             this.save();
+        },
+
+        // --- Meta-Progression Upgrades ---
+        getUpgrades() {
+            if (!currentState.upgrades) {
+                return cloneDefaultUpgrades();
+            }
+            return JSON.parse(JSON.stringify(currentState.upgrades));
+        },
+
+        getUpgradeLevel(upgradeId) {
+            const upgrade = currentState.upgrades && currentState.upgrades[upgradeId];
+            return upgrade ? upgrade.level : 1;
+        },
+
+        /**
+         * Active gameplay modifier derived from level * modifierStep (+ station baselines).
+         */
+        getUpgradeModifier(upgradeId) {
+            const upgrades = currentState.upgrades;
+            if (!upgrades || !upgrades[upgradeId]) {
+                return null;
+            }
+            const upgrade = upgrades[upgradeId];
+            const level = upgrade.level || 1;
+            const step = upgrade.modifierStep || 0;
+
+            switch (upgradeId) {
+                case 'laser_width':
+                    return UPGRADE_BASE.laser_width + (level * step);
+                case 'alignment_margin':
+                    return UPGRADE_BASE.alignment_margin + (level * step);
+                case 'log_speed':
+                    return Math.max(40, UPGRADE_BASE.log_speed - (level * step));
+                default:
+                    return level * step;
+            }
+        },
+
+        dispatchUpgradesUpdated(detail) {
+            const event = new CustomEvent('cosmic-ops-upgrades-updated', { detail });
+            window.dispatchEvent(event);
+        },
+
+        purchaseUpgrade(upgradeId) {
+            const upgrades = currentState.upgrades;
+            if (!upgrades || !upgrades[upgradeId]) {
+                return { success: false, reason: 'invalid_upgrade' };
+            }
+
+            const upgrade = upgrades[upgradeId];
+            const isMaxed = upgrade.level >= upgrade.max;
+            if (isMaxed) {
+                return { success: false, reason: 'max_level', isMaxed: true };
+            }
+            if (currentState.credits < upgrade.cost) {
+                return { success: false, reason: 'insufficient_credits', isMaxed: false };
+            }
+
+            currentState.credits -= upgrade.cost;
+            upgrade.level += 1;
+            upgrade.cost = Math.round(upgrade.cost * 1.5);
+            const nowMaxed = upgrade.level >= upgrade.max;
+
+            this.save();
+            this.dispatchUpgradesUpdated({
+                upgradeId,
+                level: upgrade.level,
+                cost: upgrade.cost,
+                modifier: this.getUpgradeModifier(upgradeId),
+                credits: currentState.credits,
+                isMaxed: nowMaxed,
+                upgrades: this.getUpgrades()
+            });
+
+            return {
+                success: true,
+                upgradeId,
+                level: upgrade.level,
+                modifier: this.getUpgradeModifier(upgradeId),
+                isMaxed: nowMaxed
+            };
+        },
+
+        getCampaignStage() {
+            return currentState.campaignStage || 1;
+        },
+
+        getTotalObjectivesFinished() {
+            return currentState.totalObjectivesFinished || 0;
+        },
+
+        getMaxedUpgradeCount() {
+            return countMaxedUpgrades(currentState.upgrades);
+        },
+
+        recordObjectiveMilestone() {
+            currentState.totalObjectivesFinished = (currentState.totalObjectivesFinished || 0) + 1;
+            syncPlayerIQ();
+            this.save();
+            return currentState.totalObjectivesFinished;
         },
 
         // --- Credits Operations ---
@@ -98,10 +251,10 @@
                 if (currentState.credits >= val) {
                     currentState.credits -= val;
                     this.save();
-                    return true; // Deduction successful
+                    return true;
                 }
             }
-            return false; // Insufficient credits or invalid value
+            return false;
         },
 
         // --- Science Intelligence Operations ---
@@ -131,6 +284,7 @@
 
         // --- Player IQ Operations ---
         getIQ() {
+            syncPlayerIQ();
             return currentState.playerIQ;
         },
 
@@ -150,7 +304,6 @@
         setSafetyRating(percentage) {
             const val = parseFloat(percentage);
             if (!isNaN(val)) {
-                // Clamp between 0% and 100%
                 currentState.safetyRating = Math.max(0, Math.min(100, val));
                 this.save();
             }
@@ -164,9 +317,6 @@
         },
 
         // --- Staged Transaction Pattern Hooks ---
-        /**
-         * Claims incremental mid-game rewards for a specific completed objective milestone
-         */
         claimMilestone(objectiveId) {
             try {
                 const payloadKey = 'active_mission_payload';
@@ -193,27 +343,22 @@
                     return false;
                 }
 
-                // Mark objective as completed
                 obj.isCompleted = true;
-
-                // Save updated payload back to LocalStorage
                 localStorage.setItem(payloadKey, JSON.stringify(payload));
 
-                // Calculate payouts based on payoutShare
                 const share = obj.payoutShare || 0;
                 const creditPayout = Math.floor((payload.creditReward || 0) * share);
                 const intelPayout = Math.floor((payload.intelReward || 0) * share);
 
-                // Instantly update master wallet balances and save
                 if (creditPayout > 0) {
                     currentState.credits += creditPayout;
                 }
                 if (intelPayout > 0) {
                     currentState.scienceIntelligence += intelPayout;
                 }
-                this.save();
 
-                // Broadcast a visual telemetry update
+                this.recordObjectiveMilestone();
+
                 const milestoneEvent = new CustomEvent('cosmic-ops-milestone-claimed', {
                     detail: {
                         objectiveId: objectiveId,
@@ -232,10 +377,6 @@
             }
         },
 
-        /**
-         * Validates and completes the active staged mission, transferring credits and science,
-         * then clears the active payload to enforce complete-to-earn integrity.
-         */
         completeActiveMission() {
             try {
                 const payloadKey = 'active_mission_payload';
@@ -246,8 +387,7 @@
                 }
 
                 const payload = JSON.parse(serialized);
-                
-                // Enforce that all objectives are completed
+
                 if (payload.objectives && Array.isArray(payload.objectives)) {
                     const allDone = payload.objectives.every(o => o.isCompleted);
                     if (!allDone) {
@@ -256,12 +396,10 @@
                     }
                 }
 
-                // 1. Distribute safety rating rewards (since currency is awarded incrementally on milestones)
                 if (payload.safetyReward && payload.safetyReward > 0) {
                     this.adjustSafetyRating(payload.safetyReward);
                 }
 
-                // Append the mission ID to the completed missions list for the mission engine to pick up
                 try {
                     const compKey = 'cosmic_ops_completed_missions';
                     const existing = localStorage.getItem(compKey);
@@ -274,13 +412,15 @@
                     console.error("Failed to append completed mission ID:", e);
                 }
 
-                // 2. Clear out the payload to prevent double-spending exploits
+                const isExodusPayload = payload.contractType === 'exodus' ||
+                    /project\s+exodus/i.test(payload.objectiveText || '');
+                if (isExodusPayload) {
+                    currentState.campaignStage = 2;
+                }
+
                 localStorage.removeItem(payloadKey);
-                
-                // 3. Persist state and dispatch updates
                 this.save();
-                
-                // Dispatch specific completion event
+
                 const completionEvent = new CustomEvent('cosmic-ops-staged-mission-completed', {
                     detail: { ...payload }
                 });
@@ -293,10 +433,6 @@
             }
         },
 
-        // --- Utility Helper Operations ---
-        /**
-         * Dispatches custom event to notify active UI elements of updates
-         */
         dispatchUpdate() {
             const event = new CustomEvent('cosmic-ops-state-updated', {
                 detail: { ...currentState }
@@ -305,7 +441,6 @@
         }
     };
 
-    // Auto-init and bind to global context for simple, robust script inclusion
     window.GameState = GameState;
     GameState.init();
 })();

@@ -144,7 +144,7 @@
             <span class="font-data text-[11px] text-on-surface-variant tracking-wider uppercase">SECTOR: LEMBANG INDONESIA // ZEISS TRACKING DOME</span>
         </div>
         <div class="flex items-center gap-4 font-data text-[11px] text-on-surface-variant">
-            <span>OPTICAL_LINK: <span class="text-tertiary">STABLE</span></span>
+            <span id="lgs-status"></span>
         </div>
     </nav>
 
@@ -154,7 +154,6 @@
             
             <!-- DYNAMIC ACTIVE MISSION COMPACT LOG -->
             <section id="active-mission-section" class="bg-surface-container border border-primary/40 p-panel-padding rounded-sm relative shadow-lg">
-                <div class="absolute top-1 right-2 font-data text-[8px] text-primary animate-pulse">// ACTIVE CONTRACT</div>
                 <div class="bg-primary/10 border border-primary/20 px-2.5 py-1 mb-2.5">
                     <h2 class="text-label-caps font-label-caps text-primary tracking-wider uppercase">ACTIVE HUB MISSION</h2>
                 </div>
@@ -169,29 +168,8 @@
                 </div>
             </section>
 
-            <!-- Station Profile -->
-            <section class="bg-surface-container border border-outline-variant p-panel-padding rounded-sm">
-                <div class="bg-outline-variant/30 px-2 py-0.5 mb-2">
-                    <h2 class="text-label-caps font-label-caps text-on-surface">STATION PROFILE</h2>
-                </div>
-                <div class="space-y-1">
-                    <div class="flex justify-between items-center py-0.5 zebra-row">
-                        <span class="text-label-caps font-label-caps text-on-surface-variant">IDENTIFIER</span>
-                        <span class="text-data-sm font-data-sm text-on-surface">BOSSCHA-ZEISS-01</span>
-                    </div>
-                    <div class="flex justify-between items-center py-0.5 zebra-row">
-                        <span class="text-label-caps font-label-caps text-on-surface-variant">COORDINATES</span>
-                        <span class="text-data-sm font-data-sm text-on-surface">6.8244° S, 107.6153° E</span>
-                    </div>
-                    <div class="flex justify-between items-center py-0.5 zebra-row">
-                        <span class="text-label-caps font-label-caps text-on-surface-variant">INSTRUMENT</span>
-                        <span class="text-data-sm font-data-sm text-secondary">60CM ZEISS REFRACTOR</span>
-                    </div>
-                </div>
-            </section>
-
             <!-- Urban Sky-Glow Tracker -->
-            <section class="bg-surface-container border border-outline-variant p-panel-padding rounded-sm">
+            <section class="bg-surface-container border border-outline-variant p-panel-padding rounded-sm flex-grow">
                 <h2 class="text-label-caps font-label-caps text-on-surface mb-2">URBAN SKY-GLOW TRACKER</h2>
                 <div class="p-3 bg-surface-container-lowest border border-outline-variant rounded-sm space-y-3">
                     <div class="flex justify-between items-center">
@@ -209,27 +187,6 @@
                         </button>
                         <div id="calibration-progress-container" class="hidden w-full h-1.5 bg-surface-container-lowest rounded-sm overflow-hidden border border-outline-variant/20">
                             <div id="calibration-progress-bar" class="h-full bg-primary transition-all duration-75" style="width: 0%;"></div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Current Observation Run -->
-            <section class="bg-surface-container border border-outline-variant p-panel-padding rounded-sm flex-grow">
-                <h2 class="text-label-caps font-label-caps text-on-surface mb-2">CURRENT OBSERVATION RUN</h2>
-                <div class="space-y-2">
-                    <div class="p-2 border border-outline-variant bg-surface-container-lowest flex items-center justify-between">
-                        <div>
-                            <span class="text-[10px] font-label-caps text-on-surface-variant block">ACTIVE TARGET</span>
-                            <span class="text-data-sm font-data-sm text-primary font-bold">ALPHA CENTAURI AB</span>
-                        </div>
-                        <span class="material-symbols-outlined text-primary text-sm">track_changes</span>
-                    </div>
-                    <div class="p-2 border border-outline-variant bg-surface-container-lowest">
-                        <span class="text-[10px] font-label-caps text-on-surface-variant block mb-1">RIGHT ASCENSION / DECLINATION</span>
-                        <div class="font-data-sm text-[11px] flex justify-between text-on-surface">
-                            <span>RA: 14h 39m 36s</span>
-                            <span>DEC: -60° 50' 02"</span>
                         </div>
                     </div>
                 </div>
@@ -301,7 +258,7 @@
                     <p class="font-data text-[11px] text-on-surface-variant leading-relaxed">
                         The photometer has successfully aligned and logged the exoplanetary transit minima point. Data packets are secure.
                     </p>
-                    <button onclick="transmitPhotometryData()" class="w-full py-2.5 bg-tertiary hover:bg-tertiary/80 text-surface font-data text-[11px] font-bold tracking-wider rounded-sm transition-all uppercase animate-pulse">
+                    <button id="btn-transmit-overlay" onclick="transmitPhotometryData()" class="w-full py-2.5 bg-tertiary hover:bg-tertiary/80 text-surface font-data text-[11px] font-bold tracking-wider rounded-sm transition-all uppercase animate-pulse">
                         [ TRANSMIT TRANSIT DATA TO HQ ]
                     </button>
                 </div>
@@ -351,6 +308,32 @@
             return activePayload.objectives.every(o => o.isCompleted);
         }
 
+        function isProjectExodusMission() {
+            if (!activePayload) return false;
+            return activePayload.contractType === 'exodus' ||
+                /project\s+exodus/i.test(activePayload.objectiveText || activePayload.title || '');
+        }
+
+        function getDataPurityPercent() {
+            if (!activePayload || !activePayload.objectives || activePayload.objectives.length === 0) return 0;
+            let sum = 0;
+            activePayload.objectives.forEach((o) => {
+                if (o.isCompleted) {
+                    sum += 100;
+                } else if (typeof o.count === 'number' && typeof o.target === 'number' && o.target > 0) {
+                    sum += Math.min(100, (o.count / o.target) * 100);
+                }
+            });
+            return Math.round(sum / activePayload.objectives.length);
+        }
+
+        function launchProjectExodusFinale() {
+            if (window.GameState) {
+                window.GameState.completeActiveMission();
+            }
+            window.location.href = '../exodus/departure.html';
+        }
+
         function verifyAndLoadState() {
             let activeMission = null;
             try {
@@ -387,7 +370,17 @@
             const creditVal = activeMission.totalCreditReward || 0;
             const intelVal = activeMission.totalIntelReward || 0;
             document.getElementById('sidebar-mission-title').innerText = activePayload.objectiveText.toUpperCase();
-            document.getElementById('sidebar-mission-desc').innerText = `Locked on target transit candidates. Align photometer capturing mechanisms within the lowest 3% transit minima point to verify habitable indices.`;
+            if (isProjectExodusMission()) {
+                document.getElementById('sidebar-mission-desc').innerText =
+                    'PROJECT EXODUS: Stream 30 classified transit packets at 100% photometric purity to authorize interstellar departure.';
+                const overlayBtn = document.getElementById('btn-transmit-overlay');
+                if (overlayBtn) {
+                    overlayBtn.innerText = '[ AUTHORIZE EXODUS DEPARTURE UPLINK ]';
+                }
+            } else {
+                document.getElementById('sidebar-mission-desc').innerText =
+                    'Locked on target transit candidates. Align photometer capturing mechanisms within the lowest 3% transit minima point to verify habitable indices.';
+            }
             document.getElementById('sidebar-mission-rewards').innerText = `+${creditVal} CR // +${intelVal} SI`;
 
             // Toggle calibration box if objective is present
@@ -432,33 +425,63 @@
             if (!container) return;
 
             container.innerHTML = '';
-            activePayload.objectives.forEach((obj, idx) => {
+            activePayload.objectives.forEach((obj) => {
                 const isCompleted = obj.isCompleted;
-                const zebraClass = idx % 2 === 0 ? 'bg-white/[0.02]' : 'bg-transparent';
-                
-                const row = document.createElement('div');
-                row.className = `flex items-center justify-between p-2 rounded-sm border border-outline-variant/10 ${zebraClass} transition-all`;
-                
-                const textClass = isCompleted ? 'text-tertiary line-through font-headline' : 'text-on-surface font-headline';
-                const icon = isCompleted ? 'task_alt' : 'radio_button_unchecked';
-                const iconColor = isCompleted ? 'text-tertiary' : 'text-outline';
-                const statusText = isCompleted ? 'ALIGNED' : 'PENDING';
 
-                row.innerHTML = `
-                    <div class="flex items-center gap-2">
-                        <span class="material-symbols-outlined text-[15px] ${iconColor}">${icon}</span>
-                        <span class="text-[11px] leading-none ${textClass}">${obj.text}</span>
-                    </div>
-                    <span class="font-data text-[10px] ${isCompleted ? 'text-tertiary' : 'text-error/70'}">${statusText}</span>
-                `;
-                container.appendChild(row);
+                const li = document.createElement('div');
+                li.className = 'mb-3 flex flex-col';
+
+                let displayName = obj.text || '';
+                displayName = displayName.replace(/\s*\(\d+\/\d+\)$/, '');
+
+                const currentCount = typeof obj.count === 'number' ? obj.count : (isCompleted ? 15 : 0);
+                const targetCount = typeof obj.target === 'number' ? obj.target : 15;
+                displayName = `${displayName} (${currentCount}/${targetCount})`;
+
+                const titleLine = document.createElement('div');
+                titleLine.className = 'font-data font-bold text-[11px]';
+                if (isCompleted) {
+                    titleLine.style.color = '#00ff66';
+                    titleLine.style.textDecoration = 'line-through';
+                    titleLine.innerText = `[X] ${displayName}`;
+                } else {
+                    titleLine.style.color = '#00f3ff';
+                    titleLine.style.textDecoration = 'none';
+                    titleLine.innerText = `[ ] ${displayName}`;
+                }
+                li.appendChild(titleLine);
+
+                const descLine = document.createElement('div');
+                descLine.className = 'font-data ps-4 text-[10px]';
+                descLine.style.color = 'rgba(0, 243, 255, 0.6)';
+                descLine.style.lineHeight = '1.3';
+                descLine.style.marginTop = '2px';
+                descLine.innerText = obj.description || '';
+                li.appendChild(descLine);
+
+                container.appendChild(li);
             });
         }
 
         function verifyCompletion() {
             if (checkAllObjectivesCompleted() && !gameFinished) {
                 gameFinished = true;
-                
+
+                const lgsStatus = document.getElementById('lgs-status');
+                if (lgsStatus) {
+                    lgsStatus.innerHTML = `<button id="btn-complete-mission" class="bg-emerald-500 text-slate-950 font-mono font-bold text-xs px-3 py-1 rounded-sm border border-emerald-400 cursor-pointer">[ DEPLOY ORBITAL DATA UPLINK ]</button>`;
+                    const btn = document.getElementById('btn-complete-mission');
+                    if (btn) {
+                        btn.addEventListener('click', () => {
+                            if (isProjectExodusMission() && getDataPurityPercent() >= 100) {
+                                launchProjectExodusFinale();
+                            } else {
+                                transmitPhotometryData();
+                            }
+                        });
+                    }
+                }
+
                 // Show completion overlay after a slight delay
                 setTimeout(() => {
                     const overlay = document.getElementById('photometer-complete-overlay');
@@ -648,69 +671,129 @@
                 });
             }
 
-            // Transit capture button click handler
-            btnLog.addEventListener('click', () => {
-                if (gameFinished) return;
-                if (isObjectiveCompleted('bs_transit')) return;
+            let transitStreamInterval = null;
+            let streamScanX = 0;
+            let streamScanTargetX = 0;
 
-                // Re-calculate distance logic on click frame to maintain strict precision
-                let progress = (frameCounter % transitPeriod) / transitPeriod;
-                let px = progress * (cw + 120) - 60;
-                let dist = Math.abs(px - targetStarX);
+            function getLogStreamIntervalMs() {
+                if (window.GameState && typeof GameState.getUpgradeModifier === 'function') {
+                    const mod = GameState.getUpgradeModifier('log_speed');
+                    if (typeof mod === 'number') return mod;
+                }
+                return Math.max(40, 85 - (1 * 15));
+            }
+
+            function getTransitBaseLuminosity() {
+                const progress = (frameCounter % transitPeriod) / transitPeriod;
+                const px = progress * (cw + 120) - 60;
+                const dist = Math.abs(px - targetStarX);
                 const transitRadius = 60;
                 let baseLuminosity = 1.0;
 
                 if (dist < transitRadius) {
-                    let normDist = dist / transitRadius;
-                    // Parabolic U-shape dip
+                    const normDist = dist / transitRadius;
                     baseLuminosity = 1.0 - 0.25 * (1.0 - normDist * normDist);
                 }
+                return baseLuminosity;
+            }
 
-                // Check lowest 3% bottom floor threshold (baseLuminosity <= 0.7575)
-                if (baseLuminosity <= 0.7575) {
-                    // Success!
-                    const transitObjective = activePayload.objectives.find(o => o.id === 'bs_transit');
-                    if (transitObjective) {
-                        transitObjective.isCompleted = true;
-                    }
-                    if (window.GameState) {
-                        window.GameState.claimMilestone('bs_transit');
-                    }
+            // Progressive transit stream logging (15 incremental packets before milestone claim)
+            btnLog.addEventListener('click', () => {
+                if (gameFinished) return;
+                if (isObjectiveCompleted('bs_transit')) return;
+                if (btnLog.disabled || transitStreamInterval) return;
 
-                    // Update controls button
-                    btnLog.disabled = true;
-                    btnLog.className = "px-6 py-2.5 bg-outline-variant text-on-surface-variant font-data text-[11px] font-bold tracking-wider rounded-sm transition-all uppercase flex-shrink-0 cursor-not-allowed";
-                    btnLog.innerText = "[ TRANSIT LOGGED ]";
+                if (!isObjectiveCompleted('bs_lock')) {
+                    chronoLogs.innerText = '[ERROR] COORDINATE LOCK REQUIRED BEFORE TRANSIT LOG';
+                    chronoLogs.parentElement.className = 'flex-grow bg-surface-container-lowest border border-error/50 p-2.5 rounded-sm h-[44px] flex items-center transition-all duration-300';
+                    chronoLogs.className = 'font-data text-[10px] text-error tracking-wide font-bold uppercase';
+                    return;
+                }
 
-                    renderChecklist();
-                    verifyCompletion();
+                const baseLuminosity = getTransitBaseLuminosity();
+                if (baseLuminosity > 0.7575) {
+                    chronoLogs.innerText = '[ERROR] CHRONO-ALIGNMENT MISSED // TRANSIT DATA INCOMPLETE';
 
-                } else {
-                    // Timing missed (either too early or too late)
-                    chronoLogs.innerText = "[ERROR] CHRONO-ALIGNMENT MISSED // TRANSIT DATA INCOMPLETE";
-                    
-                    // Flash parent container with a brief white border & white glow (abrupt duration-75)
-                    chronoLogs.parentElement.className = "flex-grow bg-surface-container-lowest border border-white p-2.5 rounded-sm h-[44px] flex items-center shadow-[0_0_12px_rgba(255,255,255,0.7)] transition-all duration-75";
-                    chronoLogs.className = "font-data text-[10px] text-white tracking-wide font-bold uppercase";
+                    chronoLogs.parentElement.className = 'flex-grow bg-surface-container-lowest border border-white p-2.5 rounded-sm h-[44px] flex items-center shadow-[0_0_12px_rgba(255,255,255,0.7)] transition-all duration-75';
+                    chronoLogs.className = 'font-data text-[10px] text-white tracking-wide font-bold uppercase';
 
-                    // Decay the flash smoothly back to warning error color after 600ms
                     setTimeout(() => {
                         if (!gameFinished && !isObjectiveCompleted('bs_transit')) {
-                            chronoLogs.parentElement.className = "flex-grow bg-surface-container-lowest border border-error/50 p-2.5 rounded-sm h-[44px] flex items-center transition-all duration-500";
-                            chronoLogs.className = "font-data text-[10px] text-error tracking-wide font-bold animate-pulse";
+                            chronoLogs.parentElement.className = 'flex-grow bg-surface-container-lowest border border-error/50 p-2.5 rounded-sm h-[44px] flex items-center transition-all duration-500';
+                            chronoLogs.className = 'font-data text-[10px] text-error tracking-wide font-bold animate-pulse';
                         }
                     }, 600);
 
-                    // Shake/Flash visual feedback on control console card
                     controlsConsole.classList.add('border-error/80', 'bg-error-container/10');
                     setTimeout(() => {
                         controlsConsole.classList.remove('border-error/80', 'bg-error-container/10');
                     }, 500);
 
-                    // Reset transit loop progression back to the start of the orbit sequence (px = -60)
-                    // This lets the player immediately try again without waiting out the full orbital loop!
                     frameCounter = Math.floor(frameCounter / transitPeriod) * transitPeriod;
+                    return;
                 }
+
+                const transitObjective = activePayload.objectives.find(o => o.id === 'bs_transit');
+                if (!transitObjective || transitObjective.isCompleted) return;
+
+                if (typeof transitObjective.count !== 'number') transitObjective.count = 0;
+                if (typeof transitObjective.target !== 'number') transitObjective.target = 15;
+
+                btnLog.disabled = true;
+                btnLog.className = 'px-6 py-2.5 bg-outline-variant text-on-surface-variant font-data text-[11px] font-bold tracking-wider rounded-sm transition-all uppercase flex-shrink-0 cursor-not-allowed';
+                btnLog.innerText = '[ LOGGING... ]';
+
+                chronoLogs.parentElement.className = 'flex-grow bg-surface-container-lowest border border-primary/40 p-2.5 rounded-sm h-[44px] flex items-center transition-all duration-300';
+                chronoLogs.className = 'font-data text-[10px] text-primary tracking-wide font-bold';
+
+                streamScanX = 0;
+                streamScanTargetX = 0;
+
+                transitStreamInterval = setInterval(() => {
+                    transitObjective.count += 1;
+                    streamScanTargetX = (transitObjective.count / transitObjective.target) * cw;
+                    localStorage.setItem('active_mission_payload', JSON.stringify(activePayload));
+
+                    const purityPct = getDataPurityPercent();
+                    chronoLogs.innerText = `[STREAM] PACKET ${transitObjective.count}/${transitObjective.target} // PURITY ${purityPct}%`;
+                    renderChecklist();
+
+                    if (transitObjective.count >= transitObjective.target) {
+                        clearInterval(transitStreamInterval);
+                        transitStreamInterval = null;
+                        streamScanTargetX = cw;
+                        transitObjective.count = transitObjective.target;
+                        transitObjective.isCompleted = false;
+                        localStorage.setItem('active_mission_payload', JSON.stringify(activePayload));
+
+                        if (window.GameState) {
+                            const claimed = window.GameState.claimMilestone('bs_transit');
+                            if (claimed) {
+                                const updated = localStorage.getItem('active_mission_payload');
+                                if (updated) activePayload = JSON.parse(updated);
+                            } else {
+                                transitObjective.isCompleted = true;
+                                localStorage.setItem('active_mission_payload', JSON.stringify(activePayload));
+                            }
+                        } else {
+                            transitObjective.isCompleted = true;
+                            localStorage.setItem('active_mission_payload', JSON.stringify(activePayload));
+                        }
+
+                        btnLog.innerText = '[ TRANSIT LOGGED ]';
+                        chronoLogs.innerText = '[SUCCESS] TRANSIT MINIMA CAPTURED AND LOGGED.';
+                        chronoLogs.parentElement.className = 'flex-grow bg-surface-container-lowest border border-tertiary p-2.5 rounded-sm h-[44px] flex items-center shadow-[0_0_8px_rgba(126,240,167,0.15)]';
+                        chronoLogs.className = 'font-data text-[10px] text-tertiary tracking-wide font-bold';
+
+                        renderChecklist();
+                        verifyCompletion();
+
+                        if (isProjectExodusMission() && getDataPurityPercent() >= 100 && checkAllObjectivesCompleted()) {
+                            chronoLogs.innerText = '[EXODUS] 30/30 PACKETS // 100% DATA PURITY // LAUNCH AUTHORIZED';
+                            setTimeout(() => launchProjectExodusFinale(), 1800);
+                        }
+                    }
+                }, getLogStreamIntervalMs());
             });
 
             function render() {
@@ -831,6 +914,20 @@
                 ctx.moveTo(cx, 0); ctx.lineTo(cx, ch);
                 ctx.stroke();
                 ctx.restore();
+
+                // Data waterfall scanner during progressive transit logging
+                if (transitStreamInterval) {
+                    streamScanX += (streamScanTargetX - streamScanX) * 0.22;
+                    const barWidth = 32;
+                    const scanCenter = Math.max(barWidth * 0.5, Math.min(cw - barWidth * 0.5, streamScanX));
+
+                    ctx.save();
+                    ctx.fillStyle = 'rgba(0, 255, 102, 0.15)';
+                    ctx.fillRect(scanCenter - barWidth / 2, 0, barWidth, ch);
+                    ctx.fillStyle = 'rgba(0, 255, 102, 0.32)';
+                    ctx.fillRect(scanCenter - 2, 0, 4, ch);
+                    ctx.restore();
+                }
 
                 // Draw alignment line from center to targetStar if locked
                 if (isObjectiveCompleted('bs_lock')) {
@@ -1034,6 +1131,10 @@
 
         // Close contract, distribute wallet credits/science, clear payload, and route back to hub
         function transmitPhotometryData() {
+            if (isProjectExodusMission() && getDataPurityPercent() >= 100) {
+                launchProjectExodusFinale();
+                return;
+            }
             if (window.GameState) {
                 const completeSuccess = window.GameState.completeActiveMission();
                 if (completeSuccess) {

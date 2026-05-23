@@ -379,6 +379,13 @@
                 </div>
             </div>
 
+            <!-- SYSTEM TECH ENHANCEMENTS (GameState meta modifiers) -->
+            <div class="space-y-2 border border-outline-variant/40 bg-surface-container-low p-3 rounded-sm">
+                <span class="font-data text-[10px] text-primary block uppercase font-bold tracking-wider">// SYSTEM TECH ENHANCEMENTS</span>
+                <p class="text-[10px] text-on-surface-variant leading-relaxed">Terminal hardware modifiers scale active enclosure loops. Purchases apply instantly without resetting staged missions.</p>
+                <div id="system-tech-upgrades-list" class="grid grid-cols-1 lg:grid-cols-3 gap-3"></div>
+            </div>
+
             <!-- Shop Elements Split Layout -->
             <div class="grid grid-cols-12 gap-6">
                 
@@ -1127,7 +1134,10 @@
                 headerSysStatus.className = "text-error";
             }
 
-            // 6. Update Tactical Upgrade Shop values
+            // 6. Render System Tech Enhancements storefront
+            renderSystemTechEnhancements();
+
+            // 7. Update Tactical Upgrade Shop values
             const shop = window.PlayerProgression.getUpgradeShopMatrix();
             for (const site in shop) {
                 const upgrade = shop[site];
@@ -1146,7 +1156,7 @@
                 }
             }
 
-            // 7. Update Active Missions display cards
+            // 8. Update Active Missions display cards
             const missions = window.MissionEngine.getMissions();
             missions.forEach(mission => {
                 const titleEl = document.getElementById(`mission-title-${mission.site}`);
@@ -1159,6 +1169,105 @@
                     payoutEl.innerText = `+${mission.rewardCredits} CR // +${mission.rewardScience} SI`;
                 }
             });
+        }
+
+        // -------------------------------------------------------------
+        // SYSTEM TECH ENHANCEMENTS STOREFRONT
+        // -------------------------------------------------------------
+
+        const SYSTEM_TECH_UPGRADE_META = {
+            laser_width: {
+                label: 'LASER LENSES',
+                description: 'Expands Mauna Kea manual LGS beam collision radius for faster aerosol clearance.'
+            },
+            alignment_margin: {
+                label: 'PHASE CORRELATOR TOLERANCE',
+                description: 'Widens Atacama slider alignment sweet-spot so correlator tracking is more forgiving.'
+            },
+            log_speed: {
+                label: 'PHOTOMETER STREAM BUFFER',
+                description: 'Accelerates Bosscha transit packet logging intervals during minima capture.'
+            }
+        };
+
+        function renderSystemTechEnhancements() {
+            const container = document.getElementById('system-tech-upgrades-list');
+            if (!container || !window.GameState) return;
+
+            const upgrades = GameState.getUpgrades();
+            const credits = GameState.getCredits();
+            container.innerHTML = '';
+
+            Object.entries(upgrades).forEach(([upgradeId, upgrade]) => {
+                const meta = SYSTEM_TECH_UPGRADE_META[upgradeId] || {
+                    label: upgradeId.replace(/_/g, ' ').toUpperCase(),
+                    description: 'Hardware modifier for enclosure telemetry systems.'
+                };
+                const isMaxed = upgrade.level >= upgrade.max;
+                const canAfford = credits >= upgrade.cost;
+                const modifierVal = GameState.getUpgradeModifier(upgradeId);
+
+                const row = document.createElement('div');
+                row.className = 'bg-surface-container border border-outline-variant/60 p-3 rounded-sm flex flex-col gap-2';
+
+                const title = document.createElement('div');
+                title.className = 'font-data text-[11px] font-bold text-primary uppercase tracking-wide';
+                title.innerText = `${meta.label} [LVL ${upgrade.level}/${upgrade.max}]`;
+
+                const desc = document.createElement('div');
+                desc.className = 'font-data text-[10px] text-on-surface-variant leading-snug ps-1';
+                desc.style.opacity = '0.85';
+                desc.innerText = meta.description;
+
+                const modLine = document.createElement('div');
+                modLine.className = 'font-data text-[9px] text-tertiary/80 ps-1';
+                modLine.innerText = `ACTIVE MOD: ${modifierVal}${upgradeId === 'log_speed' ? 'ms' : upgradeId === 'alignment_margin' ? '' : 'px'}`;
+
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'w-full mt-1 py-1.5 font-data text-[10px] font-bold tracking-wider rounded-sm uppercase transition-colors';
+
+                if (isMaxed) {
+                    btn.innerText = '[ FULLY OPTIMIZED ]';
+                    btn.disabled = true;
+                    btn.className += ' bg-outline-variant/40 text-on-surface-variant cursor-not-allowed border border-outline-variant/30';
+                } else {
+                    btn.innerText = `[ ACQUIRE: ${upgrade.cost} CR ]`;
+                    if (canAfford) {
+                        btn.className += ' bg-primary hover:bg-primary-container text-surface border border-primary/40';
+                    } else {
+                        btn.className += ' bg-surface-container-low text-on-surface-variant border border-outline-variant/40 opacity-70';
+                    }
+                    btn.addEventListener('click', () => {
+                        const result = GameState.purchaseUpgrade(upgradeId);
+                        if (result.success) {
+                            logTransaction(`[ACQUIRED] ${meta.label} upgraded to LVL ${result.level}. Modifier: ${result.modifier}`, false);
+                        } else if (result.reason === 'insufficient_credits') {
+                            logTransaction(`[ERROR] INSUFFICIENT CR FOR ${meta.label}.`, true);
+                        } else if (result.reason === 'max_level') {
+                            logTransaction(`${meta.label} is fully optimized.`, true);
+                        } else {
+                            logTransaction(`[ERROR] Purchase failed for ${meta.label}.`, true);
+                        }
+                        renderSystemTechEnhancements();
+                        updateUI();
+                    });
+                }
+
+                row.appendChild(title);
+                row.appendChild(desc);
+                row.appendChild(modLine);
+                row.appendChild(btn);
+                container.appendChild(row);
+            });
+        }
+
+        function acquireSystemTechUpgrade(upgradeId) {
+            if (!window.GameState) return;
+            const result = GameState.purchaseUpgrade(upgradeId);
+            renderSystemTechEnhancements();
+            updateUI();
+            return result;
         }
 
         // -------------------------------------------------------------
@@ -1360,6 +1469,7 @@
 
             // Attach dynamic game loop updates to notify index elements on any logic updates
             window.addEventListener('cosmic-ops-state-updated', updateUI);
+            window.addEventListener('cosmic-ops-upgrades-updated', updateUI);
             window.addEventListener('cosmic-ops-missions-updated', updateUI);
             window.addEventListener('cosmic-ops-progression-updated', updateUI);
         });
