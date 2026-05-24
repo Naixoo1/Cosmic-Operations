@@ -56,6 +56,7 @@ Below is the directory structure of the Cosmic Operations Ground Control interfa
 stitch-cosmic-ops/
 ├── README.md                                  # Core System Operating Manual
 ├── index.html                                 # Master Command Hub & Selector Hub
+├── dashboard.html                             # Global directory: manifest, threat radar, station grid, storefront
 ├── core/
 │   ├── game-state.js                          # Campaign progression, player IQ, upgrades, Exodus stage flags
 │   ├── mission-engine.js                      # Active mission contracts & staged payload generation
@@ -98,6 +99,7 @@ When the **Project Exodus** contract completes at full photometric purity, clien
 
 ### Module Descriptions
 * **`index.html`:** Host file managing the master telemetry, satellite downlinks, global logs, the System Tech Enhancements storefront, and the central system handshake sequencer.
+* **`dashboard.html`:** Two-column command directory (manifest + orbital threat monitor left; station grid, auxiliary storefront, and mission log right). Storefront uses a compact `h-[125px]` / `grid-cols-2` upgrade grid; threat safety displays whole-number percentages via rounded telemetry binding.
 * **`core/game-state.js`:** Persists `campaignStage`, `totalObjectivesFinished`, IQ calculation (`100 + objectives × 3`), hardware upgrade tiers, and Exodus completion state in `localStorage`.
 * **`core/mission-engine.js`:** Generates station contracts (including **Project Exodus**) and stages `active_mission_payload` for viewport enclosures.
 * **`assets/shared-styles.css`:** Imposes strict visual parameters, ensuring matching background grids, layout radii, and glassmorphism transparency filters.
@@ -108,7 +110,20 @@ When the **Project Exodus** contract completes at full photometric purity, clien
 
 ---
 
-## ⚡ 3. Quick Installation & Setup
+## 🛰️ 4. Dashboard Layout, Telemetry Precision & State Isolation
+
+### Layout optimization (`dashboard.html`)
+The global directory preserves a strict **side-by-side flex layout**: the left column holds the NASA Specialist Manifest and Orbital Threat Monitor (radar canvas); the right column hosts the surface-array station grid, the **System Auxiliary Storefront**, and the **Core Mission & Transaction Log**. The storefront sits directly above the mission log and renders four meta-upgrades in a compact **`h-[125px]`** container with **`grid grid-cols-2 gap-3`**, keeping the enclosure operations stack visible without vertical crowding.
+
+### Telemetry precision
+Orbital threat safety is bound from `GameState.getSafetyRating()`. The threat percentage label uses **`Math.round()`** on the clamped safety value so the UI shows stable whole percentages (e.g. `99%`) instead of floating-point artifacts (e.g. `99.99999999%`).
+
+### State isolation & storage hygiene
+Player identity is resolved from **`cosmic_username`** or **`cosmic_user_name`** in `localStorage` for manifest display, while progression data syncs across **`cosmic_ops_game_state`** and **`cosmic-ops-game-state`** (dual-key hydration on hub load). The storefront upgrade catalog is canonicalized in `core/game-state.js` (`laser_width`, `alignment_margin`, `log_speed`, **`iq_multiplier`**) with legacy key migration so duplicate enclosure entries cannot reappear; `mergeUpgrades()` runs on load and save to prevent cross-contamination from stale keys.
+
+---
+
+## ⚡ 5. Quick Installation & Setup
 
 Cosmic Ops runs as a lightweight, client-side web application. It requires no heavy backends, package management installation pools, or server compilation scripts.
 
