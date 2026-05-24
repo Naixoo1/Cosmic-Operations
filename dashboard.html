@@ -191,10 +191,7 @@
 
                 <!-- 3. REACTIVE ORBITAL THREAT GRID MONITOR -->
                 <div class="flex-grow flex flex-col justify-end pt-3 border-t border-outline-variant/50">
-                    <div class="bg-outline-variant/30 px-2 py-1 mb-2 rounded-sm">
-                        <h2 class="font-data text-[11px] font-bold tracking-widest text-on-surface uppercase">ORBITAL THREAT MONITOR</h2>
-                    </div>
-                    <div id="threat-indicator-card" class="bg-surface-container border border-primary p-3 rounded-sm space-y-3 transition-all duration-300">
+                <div id="threat-indicator-card" class="bg-surface-container border border-primary p-3 rounded-sm space-y-3 transition-all duration-300">
                         <div class="flex justify-between items-center">
                             <span class="font-data text-[9px] text-on-surface-variant block uppercase font-bold">SAFETY RATING</span>
                             <span id="threat-status-badge" class="font-data text-[9px] text-primary bg-primary/10 border border-primary/20 px-1.5 py-0.5 rounded-sm uppercase font-bold">NOMINAL</span>
@@ -290,7 +287,14 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="pt-3 border-t border-outline-variant/40 mt-3">
+                        <div class="pt-3 border-t border-outline-variant/40 mt-3 space-y-2">
+                            <div class="bg-surface-container-lowest border border-outline-variant p-2 rounded-sm space-y-1">
+                                <span class="font-data text-[9px] text-primary block uppercase font-bold">LGS Laser Lens</span>
+                                <span id="shop-tier-mauna_kea" class="font-data text-[10px] text-on-surface block">TIER: -</span>
+                                <button type="button" onclick="buyHardwareUpgrade('mauna_kea')" id="btn-upgrade-mauna_kea" class="w-full mt-1 py-1 bg-primary hover:bg-primary-container text-surface font-data text-[9px] font-bold rounded-sm uppercase transition-colors">
+                                    UPGRADE: --- CR
+                                </button>
+                            </div>
                             <button onclick="triggerDeployment('mauna_kea_operations_split_view/code.html', 'MAUNA KEA OBSERVATORY', 'MK-OBS-01', 'mauna_kea')" class="w-full py-1.5 bg-primary hover:bg-primary-container text-surface text-center block font-data text-[11px] font-bold tracking-wider rounded-sm transition-colors uppercase">
                                 CONNECT TO VIEWPORT
                             </button>
@@ -327,7 +331,14 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="pt-3 border-t border-outline-variant/40 mt-3">
+                        <div class="pt-3 border-t border-outline-variant/40 mt-3 space-y-2">
+                            <div class="bg-surface-container-lowest border border-outline-variant p-2 rounded-sm space-y-1">
+                                <span class="font-data text-[9px] text-secondary block uppercase font-bold">ALMA Correlator</span>
+                                <span id="shop-tier-atacama_array" class="font-data text-[10px] text-on-surface block">TIER: -</span>
+                                <button type="button" onclick="buyHardwareUpgrade('atacama')" id="btn-upgrade-atacama_array" class="w-full mt-1 py-1 bg-primary hover:bg-primary-container text-surface font-data text-[9px] font-bold rounded-sm uppercase transition-colors">
+                                    UPGRADE: --- CR
+                                </button>
+                            </div>
                             <button onclick="triggerDeployment('atacama_desert_operations_split_view/code.html', 'ATACAMA TELESCOPE ARRAY', 'ALMA-MAIN-04', 'atacama')" class="w-full py-1.5 bg-primary hover:bg-primary-container text-surface text-center block font-data text-[11px] font-bold tracking-wider rounded-sm transition-colors uppercase">
                                 CONNECT TO VIEWPORT
                             </button>
@@ -364,7 +375,14 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="pt-3 border-t border-outline-variant/40 mt-3">
+                        <div class="pt-3 border-t border-outline-variant/40 mt-3 space-y-2">
+                            <div class="bg-surface-container-lowest border border-outline-variant p-2 rounded-sm space-y-1">
+                                <span class="font-data text-[9px] text-tertiary block uppercase font-bold">Zeiss Photometer</span>
+                                <span id="shop-tier-bosscha" class="font-data text-[10px] text-on-surface block">TIER: -</span>
+                                <button type="button" onclick="buyHardwareUpgrade('bosscha')" id="btn-upgrade-bosscha" class="w-full mt-1 py-1 bg-primary hover:bg-primary-container text-surface font-data text-[9px] font-bold rounded-sm uppercase transition-colors">
+                                    UPGRADE: --- CR
+                                </button>
+                            </div>
                             <button onclick="triggerDeployment('bosscha_observatory_operations_split_view/code.html', 'BOSSCHA OBSERVATORY', 'BOSSCHA-ZEISS-01', 'bosscha')" class="w-full py-1.5 bg-primary hover:bg-primary-container text-surface text-center block font-data text-[11px] font-bold tracking-wider rounded-sm transition-colors uppercase">
                                 CONNECT TO VIEWPORT
                             </button>
@@ -372,107 +390,30 @@
                     </div>
 
                 </div>
+
+                <div class="mb-4">
+                    <div class="bg-outline-variant/30 px-2 py-1 mb-2 rounded-sm">
+                        <h2 class="font-data text-[11px] font-bold tracking-widest text-on-surface uppercase">SYSTEM AUXILIARY STOREFRONT</h2>
+                    </div>
+                    <div id="system-tech-upgrades-container" class="h-[125px] border border-outline-variant/50 rounded-sm p-2 bg-surface-container-lowest overflow-y-auto text-[11px] grid grid-cols-2 gap-3 space-y-0">
+                    </div>
+                </div>
+
+                <!-- Mission / Transaction Log Output -->
+                <div class="bg-surface-container border border-outline-variant p-4 rounded-sm shrink-0 space-y-2">
+                    <div class="bg-outline-variant/30 px-2 py-1 rounded-sm">
+                        <h2 class="font-data text-[11px] font-bold tracking-widest text-on-surface uppercase">CORE MISSION &amp; TRANSACTION LOG</h2>
+                    </div>
+                    <div class="bg-surface-container-lowest border border-outline-variant p-2.5 h-14 overflow-hidden rounded-sm font-data text-[10px] text-on-surface-variant/80 flex flex-col justify-end">
+                        <div id="shop-log-line-1" class="text-tertiary">&gt; Initialize asset transaction feed... OK</div>
+                        <div id="shop-log-line-2" class="opacity-70">&gt; Waiting for specialist purchase inputs...</div>
+                    </div>
+                </div>
             </section>
         </div>
 
-        <!-- 5. NASA TACTICAL UPGRADE TERMINAL -->
-        <section class="bg-surface-container border border-outline-variant p-4 rounded-sm shrink-0 z-10 terminal-glow flex flex-col gap-3">
-            <div class="flex justify-between items-center border-b border-outline-variant/50 pb-2">
-                <div>
-                    <h2 class="font-data text-[12px] font-bold tracking-widest text-primary uppercase">NASA TACTICAL UPGRADE TERMINAL // HARDWARE & ATTRIBUTE EXCHANGE</h2>
-                    <p class="text-[11px] text-on-surface-variant">Procure local hardware enhancements or invest science intelligence points into specialty systems.</p>
-                </div>
-                <div class="font-data text-[10px] text-on-surface-variant flex gap-4">
-                    <span>SYS_SECURITY: <span class="text-tertiary">ENABLED</span></span>
-                </div>
-            </div>
-
-            <!-- SYSTEM TECH ENHANCEMENTS (GameState meta modifiers) -->
-            <div class="space-y-2 border border-outline-variant/40 bg-surface-container-low p-3 rounded-sm">
-                <span class="font-data text-[10px] text-primary block uppercase font-bold tracking-wider">// SYSTEM TECH ENHANCEMENTS</span>
-                <p class="text-[10px] text-on-surface-variant leading-relaxed">Terminal hardware modifiers scale active enclosure loops. Purchases apply instantly without resetting staged missions.</p>
-                <div id="system-tech-upgrades-list" class="grid grid-cols-1 lg:grid-cols-3 gap-3"></div>
-            </div>
-
-            <!-- Shop Elements Split Layout -->
-            <div class="grid grid-cols-12 gap-6">
-                
-                <!-- Col 1: Hardware upgrades costing credits (CR) -->
-                <div class="col-span-7 space-y-2">
-                    <span class="font-data text-[10px] text-primary block uppercase font-bold tracking-wider">// HARDWARE TIER EXPANSIONS (CR PURCHASES)</span>
-                    <div class="grid grid-cols-3 gap-3">
-                        
-                        <!-- Mauna Kea Hardware -->
-                        <div class="bg-surface-container-low border border-outline-variant p-2.5 rounded-sm flex flex-col justify-between h-24">
-                            <div>
-                                <span class="font-data text-[9px] text-primary block uppercase font-bold">Mauna Kea LGS</span>
-                                <span id="shop-tier-mauna_kea" class="font-data text-[11px] text-on-surface block">TIER: -</span>
-                            </div>
-                            <button onclick="buyHardwareUpgrade('mauna_kea')" id="btn-upgrade-mauna_kea" class="w-full mt-1.5 py-1 bg-primary hover:bg-primary-container text-surface font-data text-[9px] font-bold rounded-sm uppercase transition-colors">
-                                UPGRADE: --- CR
-                            </button>
-                        </div>
-
-                        <!-- Atacama Array Hardware -->
-                        <div class="bg-surface-container-low border border-outline-variant p-2.5 rounded-sm flex flex-col justify-between h-24">
-                            <div>
-                                <span class="font-data text-[9px] text-secondary block uppercase font-bold">ALMA Correlator</span>
-                                <span id="shop-tier-atacama" class="font-data text-[11px] text-on-surface block">TIER: -</span>
-                            </div>
-                            <button onclick="buyHardwareUpgrade('atacama')" id="btn-upgrade-atacama" class="w-full mt-1.5 py-1 bg-primary hover:bg-primary-container text-surface font-data text-[9px] font-bold rounded-sm uppercase transition-colors">
-                                UPGRADE: --- CR
-                            </button>
-                        </div>
-
-                        <!-- Bosscha Hardware -->
-                        <div class="bg-surface-container-low border border-outline-variant p-2.5 rounded-sm flex flex-col justify-between h-24">
-                            <div>
-                                <span class="font-data text-[9px] text-tertiary block uppercase font-bold">Bosscha Radar</span>
-                                <span id="shop-tier-bosscha" class="font-data text-[11px] text-on-surface block">TIER: -</span>
-                            </div>
-                            <button onclick="buyHardwareUpgrade('bosscha')" id="btn-upgrade-bosscha" class="w-full mt-1.5 py-1 bg-primary hover:bg-primary-container text-surface font-data text-[9px] font-bold rounded-sm uppercase transition-colors">
-                                UPGRADE: --- CR
-                            </button>
-                        </div>
-
-                    </div>
-                </div>
-
-                <!-- Col 2: Companion Droids & Neural attributes boosters (CR / SI Purchases) -->
-                <div class="col-span-5 flex flex-col gap-2">
-                    <span class="font-data text-[10px] text-primary block uppercase font-bold tracking-wider">// SUPPORT droids & STAT BOOSTS</span>
-                    <div class="grid grid-cols-2 gap-3 flex-grow">
-                        
-                        <!-- Companion Droid -->
-                        <button onclick="buyCompanionDroid()" class="bg-surface-container-low border border-outline-variant hover:border-secondary/40 p-2 text-left rounded-sm flex flex-col justify-between hover:bg-surface-container-high transition-all">
-                            <div>
-                                <span class="font-data text-[9px] text-secondary block uppercase font-bold">COMPANION SUPPORT DROID</span>
-                                <span class="text-[10px] text-on-surface-variant block mt-0.5 leading-tight">Instantly adds companion droids, boosting Player IQ by +15.</span>
-                            </div>
-                            <span class="font-data text-[10px] text-secondary font-bold uppercase mt-1">COST: 150 CR</span>
-                        </button>
-
-                        <!-- Neural Booster -->
-                        <button onclick="buyNeuralBooster()" class="bg-surface-container-low border border-outline-variant hover:border-tertiary/40 p-2 text-left rounded-sm flex flex-col justify-between hover:bg-surface-container-high transition-all">
-                            <div>
-                                <span class="font-data text-[9px] text-tertiary block uppercase font-bold">NEURAL BRAIN INTEGRATOR</span>
-                                <span class="text-[10px] text-on-surface-variant block mt-0.5 leading-tight">Sync science points directly to IQ (+20) & Hub Health (+20).</span>
-                            </div>
-                            <span class="font-data text-[10px] text-tertiary font-bold uppercase mt-1">COST: 50 SI</span>
-                        </button>
-
-                    </div>
-                </div>
-
-            </div>
-
-            <!-- Terminal log for local purchase transactions feedback -->
-            <div class="bg-surface-container-lowest border border-outline-variant p-2.5 h-14 overflow-hidden rounded-sm font-data text-[10px] text-on-surface-variant/80 flex flex-col justify-end">
-                <div id="shop-log-line-1" class="text-tertiary">&gt; Initialize asset transaction feed... OK</div>
-                <div id="shop-log-line-2" class="opacity-70">&gt; Waiting for specialist purchase inputs...</div>
-            </div>
-        </section>
     </main>
+
 
     <!-- INLINE HANDSHAKE TRANSITION MODAL -->
     <div id="deployment-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-surface-container-lowest/90 backdrop-blur-md p-6">
@@ -1059,126 +1000,169 @@
         // -------------------------------------------------------------
 
         function updateUI() {
-            if (!window.GameState || !window.PlayerProgression || !window.MissionEngine) return;
+            const setText = (id, text) => {
+                const el = document.getElementById(id);
+                if (el) el.innerText = text;
+            };
 
-            // 1. Fetch live currency values
-            const credits = window.GameState.getCredits();
-            const science = window.GameState.getScience();
-            const iq = window.GameState.getIQ();
-            const safety = window.GameState.getSafetyRating();
-
-            // 2. Fetch progression character stats
-            const stats = window.PlayerProgression.getCharacterStats();
-
-            // 3. Update top header values
-            document.getElementById('header-credits').innerText = credits;
-            document.getElementById('header-science').innerText = science;
-            document.getElementById('header-iq').innerText = iq;
-
-            // 4. Update manifest values
-            document.getElementById('manifest-level').innerText = `LVL ${stats.level}`;
-            document.getElementById('manifest-health').innerText = `${stats.maxHealth} HP`;
-            document.getElementById('manifest-defense').innerText = `${stats.defense} km`;
-            document.getElementById('manifest-credits').innerText = credits;
-            document.getElementById('manifest-science').innerText = science;
-            document.getElementById('manifest-iq').innerText = iq;
-
-            // Render matching level titles
-            const manifestTitle = document.getElementById('manifest-title');
-            if (stats.level >= 5) {
-                manifestTitle.innerText = "NASA FLIGHT COMMANDER";
-            } else if (stats.level >= 3) {
-                manifestTitle.innerText = "SENIOR ORBITAL ARCHITECT";
+            let credits, science, iq, safety;
+            if (window.GameState) {
+                credits = GameState.getCredits();
+                science = GameState.getScience();
+                iq = GameState.getIQ();
+                safety = GameState.getSafetyRating();
             } else {
-                manifestTitle.innerText = "PRIORITY SPECIALIST";
-            }
-
-            // 5. Update Reactive Orbital Threat Grid Card
-            const threatCard = document.getElementById('threat-indicator-card');
-            const threatBadge = document.getElementById('threat-status-badge');
-            const threatPercentText = document.getElementById('threat-percent');
-            const threatBar = document.getElementById('threat-bar');
-            const headerSysStatus = document.getElementById('header-sys-status');
-
-            threatPercentText.innerText = `${Math.floor(safety)}%`;
-            threatBar.style.width = `${safety}%`;
-
-            // Reset dynamic styles
-            threatCard.className = "bg-surface-container p-3 rounded-sm space-y-3 transition-all duration-300 border ";
-            threatBadge.className = "font-data text-[9px] px-1.5 py-0.5 rounded-sm uppercase font-bold border ";
-            threatBar.className = "h-full rounded-sm transition-all duration-300 ";
-
-            if (safety >= 80) {
-                // Safe State: cyan
-                threatCard.classList.add('border-primary');
-                threatBadge.classList.add('text-primary', 'bg-primary/10', 'border-primary/20');
-                threatBadge.innerText = "NOMINAL";
-                threatPercentText.className = "font-data text-2xl font-bold text-primary";
-                threatBar.classList.add('bg-primary');
-                headerSysStatus.innerText = "NOMINAL";
-                headerSysStatus.className = "text-tertiary";
-            } else if (safety > 10) {
-                // Warning State: amber pulsing
-                threatCard.classList.add('border-secondary');
-                threatBadge.classList.add('text-secondary', 'bg-secondary/10', 'border-secondary/20', 'led-pulse');
-                threatBadge.innerText = "SECTOR DECAY";
-                threatPercentText.className = "font-data text-2xl font-bold text-secondary";
-                threatBar.classList.add('bg-secondary');
-                headerSysStatus.innerText = "THREAT WARNING";
-                headerSysStatus.className = "text-secondary led-pulse";
-            } else if (safety > 0) {
-                // Critical State: red flashing
-                threatCard.classList.add('border-error', 'emergency-active');
-                threatBadge.classList.add('text-error', 'bg-error/10', 'border-error/20');
-                threatBadge.innerText = "CRITICAL COMPROMISE";
-                threatPercentText.className = "font-data text-2xl font-bold text-error animate-pulse";
-                threatBar.classList.add('bg-error');
-                headerSysStatus.innerText = "EMERGENCY BREACH";
-                headerSysStatus.className = "text-error animate-pulse";
-            } else {
-                // 0% Hard Screen Lock simulation trigger
-                document.getElementById('screen-lock-overlay').classList.remove('hidden');
-                headerSysStatus.innerText = "SEVERED";
-                headerSysStatus.className = "text-error";
-            }
-
-            // 6. Render System Tech Enhancements storefront
-            renderSystemTechEnhancements();
-
-            // 7. Update Tactical Upgrade Shop values
-            const shop = window.PlayerProgression.getUpgradeShopMatrix();
-            for (const site in shop) {
-                const upgrade = shop[site];
-                const tierEl = document.getElementById(`shop-tier-${site}`);
-                const btnEl = document.getElementById(`btn-upgrade-${site}`);
-
-                if (tierEl && btnEl) {
-                    tierEl.innerText = upgrade.isMaxed ? "TIER: MAX (LVL 5)" : `TIER: LVL ${upgrade.currentTier}`;
-                    btnEl.innerText = upgrade.isMaxed ? "MAXED OUT" : `UPGRADE: ${upgrade.nextCost} CR`;
-                    
-                    if (upgrade.isMaxed) {
-                        btnEl.className = "w-full mt-1.5 py-1 bg-outline-variant text-on-surface-variant font-data text-[9px] font-bold rounded-sm uppercase cursor-not-allowed";
-                    } else {
-                        btnEl.className = "w-full mt-1.5 py-1 bg-primary hover:bg-primary-container text-surface font-data text-[9px] font-bold rounded-sm uppercase transition-colors";
+                const stateData = localStorage.getItem('cosmic-ops-game-state') || localStorage.getItem('cosmic_ops_game_state');
+                let state = { credits: 500, scienceIntelligence: 100, playerIQ: 100, safetyRating: 100 };
+                if (stateData) {
+                    try {
+                        state = JSON.parse(stateData);
+                    } catch(e) {
+                        console.error("Failed to parse state data, dropping back to baseline matrices.");
                     }
                 }
+                credits = state.credits;
+                science = state.scienceIntelligence;
+                iq = state.playerIQ;
+                safety = state.safetyRating;
             }
 
-            // 8. Update Active Missions display cards
-            const missions = window.MissionEngine.getMissions();
-            missions.forEach(mission => {
-                const titleEl = document.getElementById(`mission-title-${mission.site}`);
-                const descEl = document.getElementById(`mission-desc-${mission.site}`);
-                const payoutEl = document.getElementById(`mission-payout-${mission.site}`);
+            setText('manifest-credits', credits);
+            setText('manifest-science', science);
+            setText('manifest-iq', iq);
 
-                if (titleEl && descEl && payoutEl) {
-                    titleEl.innerText = mission.title;
-                    descEl.innerText = mission.description;
-                    payoutEl.innerText = `+${mission.rewardCredits} CR // +${mission.rewardScience} SI`;
+            if (window.PlayerProgression) {
+                const stats = PlayerProgression.getCharacterStats();
+                setText('manifest-level', 'LVL ' + stats.level);
+                setText('manifest-health', stats.maxHealth + ' HP');
+                setText('manifest-defense', stats.defense + ' km');
+            }
+
+            // 1. SAFE METRIC BINDINGS: Prevent script breaks if IDs are unmapped in HTML layout
+            const elementsMap = {
+                'player-credits': credits,
+                'credits-display': credits,
+                'player-science': science,
+                'science-display': science,
+                'player-iq': iq,
+                'iq-display': iq,
+                'player-safety': safety,
+                'safety-display': safety + '%'
+            };
+
+            // Safely assign data metrics only if the UI node actually exists
+            Object.entries(elementsMap).forEach(([id, value]) => setText(id, value));
+
+            const clampedSafety = Math.max(0, Math.min(100, safety));
+            setText('threat-percent', Math.round(clampedSafety) + '%');
+            const threatBar = document.getElementById('threat-bar');
+            if (threatBar) threatBar.style.width = clampedSafety + '%';
+
+            const threatBadge = document.getElementById('threat-status-badge');
+            if (threatBadge) {
+                if (clampedSafety >= 80) {
+                    threatBadge.innerText = 'NOMINAL';
+                    threatBadge.className = 'font-data text-[9px] text-primary bg-primary/10 border border-primary/20 px-1.5 py-0.5 rounded-sm uppercase font-bold';
+                } else if (clampedSafety >= 10) {
+                    threatBadge.innerText = 'ELEVATED';
+                    threatBadge.className = 'font-data text-[9px] text-secondary bg-secondary/10 border border-secondary/20 px-1.5 py-0.5 rounded-sm uppercase font-bold';
+                } else {
+                    threatBadge.innerText = 'CRITICAL';
+                    threatBadge.className = 'font-data text-[9px] text-error bg-error/10 border border-error/20 px-1.5 py-0.5 rounded-sm uppercase font-bold';
+                }
+            }
+
+            if (window.MissionEngine) {
+                const missions = MissionEngine.getMissions();
+                const siteMap = {
+                    mauna_kea: { title: 'mission-title-mauna_kea', desc: 'mission-desc-mauna_kea', payout: 'mission-payout-mauna_kea' },
+                    atacama: { title: 'mission-title-atacama', desc: 'mission-desc-atacama', payout: 'mission-payout-atacama' },
+                    bosscha: { title: 'mission-title-bosscha', desc: 'mission-desc-bosscha', payout: 'mission-payout-bosscha' }
+                };
+                Object.entries(siteMap).forEach(([site, ids]) => {
+                    const mission = missions.find(m => m.site === site && m.status === 'active');
+                    if (mission) {
+                        setText(ids.title, mission.title);
+                        setText(ids.desc, mission.description);
+                        setText(ids.payout, `+${mission.rewardCredits} CR // +${mission.rewardScience} SI`);
+                    }
+                });
+            }
+
+            if (window.PlayerProgression) {
+                const matrix = PlayerProgression.getUpgradeShopMatrix();
+                [
+                    { site: 'mauna_kea', tierId: 'shop-tier-mauna_kea', btnId: 'btn-upgrade-mauna_kea' },
+                    { site: 'atacama', tierId: 'shop-tier-atacama_array', btnId: 'btn-upgrade-atacama_array' },
+                    { site: 'bosscha', tierId: 'shop-tier-bosscha', btnId: 'btn-upgrade-bosscha' }
+                ].forEach(({ site, tierId, btnId }) => {
+                    const data = matrix[site];
+                    if (!data) return;
+                    setText(tierId, data.isMaxed ? `TIER: ${data.currentTier} (MAX)` : `TIER: ${data.currentTier}`);
+                    const btn = document.getElementById(btnId);
+                    if (btn) {
+                        if (data.isMaxed) {
+                            btn.innerText = 'MAX TIER';
+                            btn.disabled = true;
+                        } else {
+                            btn.innerText = `UPGRADE: ${data.nextCost} CR`;
+                            btn.disabled = false;
+                        }
+                    }
+                });
+            }
+
+            // 2. SAFE ENCLOSURE REWARD CALCULATIONS
+            const enclosures = [
+                { id: 1, base: 50, val: science },
+                { id: 2, base: 75, val: iq },
+                { id: 3, base: 120, val: science + iq }
+            ];
+
+            enclosures.forEach(enc => {
+                const prizeValue = Math.floor(enc.base * (1 + (enc.val / 200)));
+                const displayNode = document.getElementById(`enc${enc.id}-bonus`) || document.getElementById(`enclosure-${enc.id}-prize`);
+                if (displayNode) {
+                    displayNode.innerText = prizeValue + " CR";
                 }
             });
-        }
 
+            // 3. SAFE UPGRADE GENERATOR MATRIX
+            const upgradeContainer = document.getElementById('upgrades-container') || document.getElementById('upgrades-list');
+            if (!upgradeContainer) {
+                console.warn("Target upgrades interface viewport element not found in active markup layer.");
+                /* legacy upgrades container not present on dashboard layout */
+            }
+
+            if (upgradeContainer) {
+            // Clear placeholder '---' elements safely
+            upgradeContainer.innerHTML = '';
+
+            const activeUpgrades = [
+                { id: 'up_1', title: 'QUANTUM COMPILER V2', cost: 150, desc: 'Increases baseline Science Intelligence generation velocity.' },
+                { id: 'up_2', title: 'NEURAL SYNC INTERFACE', cost: 300, desc: 'Optimizes core Player IQ matrix computation limits.' },
+                { id: 'up_3', title: 'PLASMA SHIELD GRID', cost: 450, desc: 'Reinforces infrastructure safety ratings against sector drops.' }
+            ];
+
+            activeUpgrades.forEach(up => {
+                const upgradeCard = document.createElement('div');
+                upgradeCard.className = "p-3 bg-surface-container border border-outline-variant rounded-sm flex justify-between items-center hover:border-primary/40 transition-all";
+                upgradeCard.innerHTML = `
+                    <div>
+                        <div class="text-[12px] font-bold text-primary font-mono">${up.title}</div>
+                        <div class="text-[10px] text-text-muted mt-0.5">${up.desc}</div>
+                    </div>
+                    <button onclick="purchaseTargetUpgrade('${up.id}', ${up.cost})" class="px-3 py-1.5 bg-primary text-on-primary font-mono text-[10px] font-bold rounded-sm hover:bg-primary-dim hover:text-primary transition-colors">
+                        ${up.cost} CR
+                    </button>
+                `;
+                upgradeContainer.appendChild(upgradeCard);
+            });
+            }
+
+            renderSystemTechEnhancements();
+        }
+        
         // -------------------------------------------------------------
         // SYSTEM TECH ENHANCEMENTS STOREFRONT
         // -------------------------------------------------------------
@@ -1195,45 +1179,68 @@
             log_speed: {
                 label: 'PHOTOMETER STREAM BUFFER',
                 description: 'Accelerates Bosscha transit packet logging intervals during minima capture.'
+            },
+            iq_multiplier: {
+                label: 'Tactical IQ Upgrade',
+                description: 'Accelerate critical intelligence acquisition vectors.'
+            },
+            player_iq: {
+                label: 'Tactical IQ Upgrade',
+                description: 'Accelerate critical intelligence acquisition vectors.'
             }
         };
 
+        const STOREFRONT_UPGRADE_ORDER = ['laser_width', 'alignment_margin', 'log_speed', 'iq_multiplier'];
+
+        function formatUpgradeModifierLine(upgradeId, modifierVal) {
+            if (modifierVal === null || modifierVal === undefined) return 'MOD: —';
+            if (upgradeId === 'log_speed') return `MOD: ${modifierVal}ms`;
+            if (upgradeId === 'alignment_margin') return `MOD: ${modifierVal}`;
+            if (upgradeId === 'iq_multiplier' || upgradeId === 'player_iq') return `MOD: +${modifierVal} IQ`;
+            return `MOD: ${modifierVal}px`;
+        }
+
         function renderSystemTechEnhancements() {
-            const container = document.getElementById('system-tech-upgrades-list');
+            const container = document.getElementById('system-tech-upgrades-container');
             if (!container || !window.GameState) return;
 
             const upgrades = GameState.getUpgrades();
             const credits = GameState.getCredits();
+            const order = GameState.getStorefrontUpgradeOrder
+                ? GameState.getStorefrontUpgradeOrder()
+                : STOREFRONT_UPGRADE_ORDER;
             container.innerHTML = '';
 
-            Object.entries(upgrades).forEach(([upgradeId, upgrade]) => {
+            order.forEach((upgradeId) => {
+                const upgrade = upgrades[upgradeId];
+                if (!upgrade) return;
+
                 const meta = SYSTEM_TECH_UPGRADE_META[upgradeId] || {
-                    label: upgradeId.replace(/_/g, ' ').toUpperCase(),
-                    description: 'Hardware modifier for enclosure telemetry systems.'
+                    label: upgradeId.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
+                    description: 'System modifier for command hub telemetry.'
                 };
                 const isMaxed = upgrade.level >= upgrade.max;
                 const canAfford = credits >= upgrade.cost;
                 const modifierVal = GameState.getUpgradeModifier(upgradeId);
 
                 const row = document.createElement('div');
-                row.className = 'bg-surface-container border border-outline-variant/60 p-3 rounded-sm flex flex-col gap-2';
+                row.className = 'border border-outline-variant/40 rounded-sm p-1.5 flex flex-col gap-0.5 bg-surface-container min-h-0';
 
                 const title = document.createElement('div');
-                title.className = 'font-data text-[11px] font-bold text-primary uppercase tracking-wide';
+                title.className = 'font-data text-[9px] font-bold text-primary uppercase tracking-wide leading-tight';
                 title.innerText = `${meta.label} [LVL ${upgrade.level}/${upgrade.max}]`;
 
                 const desc = document.createElement('div');
-                desc.className = 'font-data text-[10px] text-on-surface-variant leading-snug ps-1';
-                desc.style.opacity = '0.85';
+                desc.className = 'font-data text-[8px] text-on-surface-variant leading-tight line-clamp-1 opacity-80';
                 desc.innerText = meta.description;
 
                 const modLine = document.createElement('div');
-                modLine.className = 'font-data text-[9px] text-tertiary/80 ps-1';
-                modLine.innerText = `ACTIVE MOD: ${modifierVal}${upgradeId === 'log_speed' ? 'ms' : upgradeId === 'alignment_margin' ? '' : 'px'}`;
+                modLine.className = 'font-data text-[8px] text-tertiary/80 leading-tight truncate';
+                modLine.innerText = formatUpgradeModifierLine(upgradeId, modifierVal);
 
                 const btn = document.createElement('button');
                 btn.type = 'button';
-                btn.className = 'w-full mt-1 py-1.5 font-data text-[10px] font-bold tracking-wider rounded-sm uppercase transition-colors';
+                btn.className = 'w-full py-0.5 font-data text-[8px] font-bold tracking-wide rounded-sm uppercase transition-colors';
 
                 if (isMaxed) {
                     btn.innerText = '[ FULLY OPTIMIZED ]';
@@ -1311,6 +1318,7 @@
             const success = window.PlayerProgression.purchaseUpgrade(site);
             if (success) {
                 logTransaction(`Approved: upgraded ${matrix.name} to tier ${matrix.currentTier + 1}.`, false);
+                updateUI();
             } else {
                 logTransaction(`[ERROR] CREDITS INSUFFICIENT FOR ${matrix.name.toUpperCase()}!`, true);
             }
@@ -1491,15 +1499,20 @@
                 safetyRating: 100
             });
 
-            if (!localStorage.getItem('cosmic-ops-game-state') && !localStorage.getItem('cosmic_ops_game_state')) {
-                localStorage.setItem('cosmic-ops-game-state', fallbackState);
-                localStorage.setItem('cosmic_ops_game_state', fallbackState);
-            } else if (localStorage.getItem('cosmic_ops_game_state') && !localStorage.getItem('cosmic-ops-game-state')) {
-                // If the game saved under the underscore key, copy it to the hyphenated key
-                localStorage.setItem('cosmic-ops-game-state', localStorage.getItem('cosmic_ops_game_state'));
-            } else if (localStorage.getItem('cosmic-ops-game-state') && !localStorage.getItem('cosmic_ops_game_state')) {
-                // Vice versa
-                localStorage.setItem('cosmic_ops_game_state', localStorage.getItem('cosmic-ops-game-state'));
+            // Hydrate both storage pathways so engine hooks read consistent numeric values.
+            const hyphenKey = 'cosmic-ops-game-state';
+            const underscoreKey = 'cosmic_ops_game_state';
+
+            const hyphenVal = localStorage.getItem(hyphenKey);
+            const underscoreVal = localStorage.getItem(underscoreKey);
+
+            if (!hyphenVal && !underscoreVal) {
+                localStorage.setItem(hyphenKey, fallbackState);
+                localStorage.setItem(underscoreKey, fallbackState);
+            } else if (underscoreVal && !hyphenVal) {
+                localStorage.setItem(hyphenKey, underscoreVal);
+            } else if (hyphenVal && !underscoreVal) {
+                localStorage.setItem(underscoreKey, hyphenVal);
             }
 
             updateUI();

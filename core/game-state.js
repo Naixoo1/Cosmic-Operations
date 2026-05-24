@@ -10,14 +10,18 @@
     const UPGRADE_BASE = {
         laser_width: 8,
         alignment_margin: 1.4,
-        log_speed: 85
+        log_speed: 85,
+        iq_multiplier: 0
     };
+
+    const STOREFRONT_UPGRADE_IDS = ['laser_width', 'alignment_margin', 'log_speed', 'iq_multiplier'];
 
     function getDefaultUpgrades() {
         return {
             laser_width: { level: 1, max: 3, cost: 150, modifierStep: 4 },
             alignment_margin: { level: 1, max: 3, cost: 200, modifierStep: 0.3 },
-            log_speed: { level: 1, max: 3, cost: 175, modifierStep: 15 }
+            log_speed: { level: 1, max: 3, cost: 175, modifierStep: 15 },
+            iq_multiplier: { level: 1, max: 3, cost: 225, modifierStep: 5 }
         };
     }
 
@@ -25,12 +29,28 @@
         return JSON.parse(JSON.stringify(getDefaultUpgrades()));
     }
 
+    function migrateLegacyUpgradeKeys(savedUpgrades) {
+        if (!savedUpgrades || typeof savedUpgrades !== 'object') {
+            return {};
+        }
+        const saved = { ...savedUpgrades };
+        const legacyIq = saved.iq_multiplier || saved.player_iq || saved.enclosure_auto_heal || saved.enclosure_heal;
+        if (legacyIq && !saved.iq_multiplier) {
+            saved.iq_multiplier = { ...legacyIq };
+        }
+        delete saved.enclosure_auto_heal;
+        delete saved.enclosure_heal;
+        delete saved.player_iq;
+        return saved;
+    }
+
     function mergeUpgrades(savedUpgrades) {
         const defaults = getDefaultUpgrades();
+        const migrated = migrateLegacyUpgradeKeys(savedUpgrades);
         const merged = {};
         Object.keys(defaults).forEach((key) => {
             const base = defaults[key];
-            const saved = savedUpgrades && savedUpgrades[key] ? savedUpgrades[key] : {};
+            const saved = migrated[key] ? migrated[key] : {};
             merged[key] = { ...base, ...saved };
             if (merged[key].modifierStep === undefined && merged[key].modifier !== undefined) {
                 merged[key].modifierStep = base.modifierStep;
@@ -116,6 +136,7 @@
 
         save() {
             try {
+                currentState.upgrades = mergeUpgrades(currentState.upgrades);
                 localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(currentState));
                 this.dispatchUpdate();
             } catch (err) {
@@ -136,7 +157,11 @@
             if (!currentState.upgrades) {
                 return cloneDefaultUpgrades();
             }
-            return JSON.parse(JSON.stringify(currentState.upgrades));
+            return mergeUpgrades(currentState.upgrades);
+        },
+
+        getStorefrontUpgradeOrder() {
+            return [...STOREFRONT_UPGRADE_IDS];
         },
 
         getUpgradeLevel(upgradeId) {
@@ -163,6 +188,8 @@
                     return UPGRADE_BASE.alignment_margin + (level * step);
                 case 'log_speed':
                     return Math.max(40, UPGRADE_BASE.log_speed - (level * step));
+                case 'iq_multiplier':
+                    return level * step;
                 default:
                     return level * step;
             }
@@ -285,7 +312,8 @@
         // --- Player IQ Operations ---
         getIQ() {
             syncPlayerIQ();
-            return currentState.playerIQ;
+            const iqBonus = this.getUpgradeModifier('iq_multiplier');
+            return currentState.playerIQ + (typeof iqBonus === 'number' ? iqBonus : 0);
         },
 
         addIQ(amount) {
